@@ -5,6 +5,7 @@ import Html exposing (Html, text, div, img)
 import Collage exposing (Form, collage, circle, defaultLine, move, outlined, rect, segment, traced)
 import Element exposing (Element, toHtml)
 import Task exposing (perform)
+import Mouse
 import Window
 
 
@@ -16,9 +17,19 @@ type alias Point =
 
 
 type alias Edge =
-    { from : Int
-    , to : Int
+    { from : PointIndex
+    , to : PointIndex
     }
+
+
+type alias PointIndex =
+    Int
+
+
+type Cursor
+    = Bored
+    | Hovering PointIndex
+    | Dragging PointIndex
 
 
 type alias Model =
@@ -26,9 +37,11 @@ type alias Model =
     , height : Int
     , points : List Point
     , edges : List Edge
+    , cursor : Cursor
     }
 
 
+fallbackPoint : Point
 fallbackPoint =
     ( -9999, 9999 )
 
@@ -52,6 +65,7 @@ init =
             , Edge 3 4
             , Edge 0 4
             ]
+      , cursor = Bored
       }
     , perform WindowSize Window.size
     )
@@ -62,18 +76,122 @@ init =
 
 
 type Msg
-    = WindowSize Window.Size
+    = MouseDown Mouse.Position
+    | MouseMove Mouse.Position
+    | MouseUp Mouse.Position
     | NoOp
+    | WindowSize Window.Size
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        WindowSize { width, height } ->
-            { model | width = width, height = height } ! []
+        MouseDown { x, y } ->
+            let
+                nearPoint =
+                    indexOfPointNear model.points (screenToPoint model x y)
+
+                cursor =
+                    nearPoint
+                        |> Maybe.map Dragging
+                        |> Maybe.withDefault Bored
+            in
+                { model | cursor = cursor } ! []
+
+        MouseMove { x, y } ->
+            let
+                mousePoint =
+                    screenToPoint model x y
+            in
+                case model.cursor of
+                    Dragging index ->
+                        (updateDragPoint model index mousePoint) ! []
+
+                    _ ->
+                        let
+                            nearPoint =
+                                indexOfPointNear model.points mousePoint
+
+                            cursor =
+                                nearPoint
+                                    |> Maybe.map Hovering
+                                    |> Maybe.withDefault Bored
+                        in
+                            { model | cursor = cursor } ! []
+
+        MouseUp { x, y } ->
+            { model | cursor = Bored } ! []
 
         NoOp ->
             model ! []
+
+        WindowSize { width, height } ->
+            { model | width = width, height = height } ! []
+
+
+updateDragPoint : Model -> PointIndex -> Point -> Model
+updateDragPoint model index newValue =
+    { model
+        | points =
+            List.concat
+                [ List.take index model.points
+                , [ newValue ]
+                , List.drop (index + 1) model.points
+                ]
+    }
+
+
+
+{- Zip up an index with each point: [(0, (x, y)), (1, (x, y)), ...] -}
+
+
+indexPoints : List Point -> List ( Int, Point )
+indexPoints points =
+    List.map2 (,) (List.range 0 (List.length points - 1)) points
+
+
+indexOfPointNear : List Point -> Point -> Maybe PointIndex
+indexOfPointNear points test =
+    let
+        distance : Point -> Point -> Float
+        distance ( x1, y1 ) ( x2, y2 ) =
+            let
+                square x =
+                    x * x
+            in
+                sqrt (square (abs (x2 - x1)) + square (abs (y2 - y1)))
+
+        indexedDistance : ( Int, Point ) -> ( Int, Float )
+        indexedDistance ( index, point ) =
+            ( index, distance point test )
+
+        closest =
+            -- Determine distance between `test` and each point and sort distances
+            List.map indexedDistance (indexPoints points)
+                |> List.sortBy Tuple.second
+                |> List.head
+    in
+        case closest of
+            Nothing ->
+                Nothing |> Debug.log "Bug! indexOfPointNear received empty list?"
+
+            Just ( closestIndex, closestDistance ) ->
+                if closestDistance < 5.0 then
+                    Just closestIndex
+                else
+                    Nothing
+
+
+screenToPoint : Model -> Int -> Int -> Point
+screenToPoint model x y =
+    let
+        xOrigin =
+            (toFloat model.width) / 2.0
+
+        yOrigin =
+            (toFloat model.height) / 2.0
+    in
+        ( (toFloat x) - xOrigin, yOrigin - (toFloat y) )
 
 
 
@@ -90,20 +208,23 @@ view model =
             toFloat model.height
     in
         List.concat
-            [ viewPoints model.points
+            [ viewPoints model
             , viewEdges model.edges model.points
             ]
             |> collage model.width model.height
             |> toHtml
 
 
-viewPoints : List Point -> List Form
-viewPoints points =
+viewPoints : Model -> List Form
+viewPoints model =
     let
-        viewPoint ( x, y ) =
+        highlightIndex =
+            model.cursor
+
+        viewPoint index ( x, y ) =
             circle 8 |> outlined defaultLine |> move ( x, y )
     in
-        List.map viewPoint points
+        List.indexedMap viewPoint model.points
 
 
 viewEdges : List Edge -> List Point -> List Form
@@ -153,4 +274,9 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch [ Window.resizes WindowSize ]
+    Sub.batch
+        [ Mouse.downs MouseDown
+        , Mouse.moves MouseMove
+        , Mouse.ups MouseUp
+        , Window.resizes WindowSize
+        ]

@@ -1,8 +1,9 @@
 module Main exposing (..)
 
 import Array
+import Color
 import Html exposing (Html, text, div, img)
-import Collage exposing (Form, collage, circle, defaultLine, move, outlined, rect, segment, traced)
+import Collage exposing (Form, LineStyle, collage, circle, defaultLine, move, outlined, rect, segment, traced)
 import Element exposing (Element, toHtml)
 import Task exposing (perform)
 import Mouse
@@ -46,25 +47,38 @@ fallbackPoint =
     ( -9999, 9999 )
 
 
+pointRadius : Float
+pointRadius =
+    10.0
+
+
+level1 : { points : List Point, edges : List Edge }
+level1 =
+    { points =
+        [ ( 0, 0 )
+        , ( -400, -335 )
+        , ( -350, 270 )
+        , ( 200, -250 )
+        , ( 30, 320 )
+        ]
+    , edges =
+        [ Edge 0 1
+        , Edge 0 2
+        , Edge 1 2
+        , Edge 2 3
+        , Edge 3 4
+        , Edge 0 4
+        , Edge 1 4
+        ]
+    }
+
+
 init : ( Model, Cmd Msg )
 init =
     ( { width = 0
       , height = 0
-      , points =
-            [ ( 0, 0 )
-            , ( -400, -335 )
-            , ( -350, 270 )
-            , ( 200, -250 )
-            , ( 30, 320 )
-            ]
-      , edges =
-            [ Edge 0 1
-            , Edge 0 2
-            , Edge 1 2
-            , Edge 2 3
-            , Edge 3 4
-            , Edge 0 4
-            ]
+      , points = level1.points
+      , edges = level1.edges
       , cursor = Bored
       }
     , perform WindowSize Window.size
@@ -120,7 +134,16 @@ update msg model =
                             { model | cursor = cursor } ! []
 
         MouseUp { x, y } ->
-            { model | cursor = Bored } ! []
+            { model
+                | cursor =
+                    case model.cursor of
+                        Dragging index ->
+                            Hovering index
+
+                        value ->
+                            value
+            }
+                ! []
 
         NoOp ->
             model ! []
@@ -176,7 +199,7 @@ indexOfPointNear points test =
                 Nothing |> Debug.log "Bug! indexOfPointNear received empty list?"
 
             Just ( closestIndex, closestDistance ) ->
-                if closestDistance < 5.0 then
+                if closestDistance < pointRadius then
                     Just closestIndex
                 else
                     Nothing
@@ -215,14 +238,38 @@ view model =
             |> toHtml
 
 
+highlighted : LineStyle
+highlighted =
+    { defaultLine | color = Color.red }
+
+
 viewPoints : Model -> List Form
 viewPoints model =
     let
         highlightIndex =
-            model.cursor
+            case model.cursor of
+                Bored ->
+                    Nothing
+
+                Hovering index ->
+                    Just index
+
+                Dragging index ->
+                    Just index
+
+        lineStyleForIndex index =
+            case highlightIndex of
+                Just highlightPointIndex ->
+                    if highlightPointIndex == index then
+                        highlighted
+                    else
+                        defaultLine
+
+                _ ->
+                    defaultLine
 
         viewPoint index ( x, y ) =
-            circle 8 |> outlined defaultLine |> move ( x, y )
+            circle pointRadius |> outlined (lineStyleForIndex index) |> move ( x, y )
     in
         List.indexedMap viewPoint model.points
 

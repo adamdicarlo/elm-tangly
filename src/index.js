@@ -1,6 +1,3 @@
-require('./main.css');
-var Elm = require('./Main.elm');
-
-var root = document.getElementById('root');
-
-Elm.Main.embed(root);
+require('./main.css')
+const Elm = require('./App.elm')
+Elm.App.embed(document.getElementById('root'))

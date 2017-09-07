@@ -1,13 +1,21 @@
-port module Main exposing (..)
+-- 'port' module req'd for node runner?
+
+
+module Main exposing (..)
 
 import Tests
-import Test.Runner.Node exposing (run)
+
+
+-- import Test.Runner.Node exposing (TestProgram, run)
+
+import Test.Runner.Html exposing (TestProgram, run)
 import Json.Encode exposing (Value)
 
 
-main : Test.Runner.Node.TestProgram
+main : TestProgram
 main =
-    run emit Tests.all
+    run Tests.all
 
 
-port emit : ( String, Value ) -> Cmd msg
+
+-- port emit : ( String, Value ) -> Cmd msg

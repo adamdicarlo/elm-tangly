@@ -1,36 +1,25 @@
-module Main exposing (..)
+module App exposing (..)
 
 import Array
-import Color
+import Color exposing (Color)
 import Html exposing (Html, text, div, img)
 import Collage exposing (Form, LineStyle, collage, circle, defaultLine, move, outlined, rect, segment, traced)
+import Edge exposing (allIntersections)
 import Element exposing (Element, toHtml)
-import Task exposing (perform)
+import Math.Vector2 exposing (Vec2, distance, fromTuple, toTuple, vec2)
 import Mouse
+import Task exposing (perform)
+import Types
+    exposing
+        ( Cursor(Bored, Dragging, Hovering)
+        , Edge
+        , Point
+        , PointIndex
+        )
 import Window
 
 
 ---- MODEL ----
-
-
-type alias Point =
-    ( Float, Float )
-
-
-type alias Edge =
-    { from : PointIndex
-    , to : PointIndex
-    }
-
-
-type alias PointIndex =
-    Int
-
-
-type Cursor
-    = Bored
-    | Hovering PointIndex
-    | Dragging PointIndex
 
 
 type alias Model =
@@ -44,22 +33,22 @@ type alias Model =
 
 fallbackPoint : Point
 fallbackPoint =
-    ( -9999, 9999 )
+    vec2 -9999 9999
 
 
 pointRadius : Float
 pointRadius =
-    10.0
+    8
 
 
 level1 : { points : List Point, edges : List Edge }
 level1 =
     { points =
-        [ ( 0, 0 )
-        , ( -400, -335 )
-        , ( -350, 270 )
-        , ( 200, -250 )
-        , ( 30, 320 )
+        [ vec2 0 0
+        , vec2 -400 -335
+        , vec2 -350 270
+        , vec2 200 -250
+        , vec2 30 320
         ]
     , edges =
         [ Edge 0 1
@@ -164,26 +153,15 @@ updateDragPoint model index newValue =
     }
 
 
-
-{- Zip up an index with each point: [(0, (x, y)), (1, (x, y)), ...] -}
-
-
 indexPoints : List Point -> List ( Int, Point )
 indexPoints points =
+    -- Zip up an index with each point: [(0, (x, y)), (1, (x, y)), ...]
     List.map2 (,) (List.range 0 (List.length points - 1)) points
 
 
 indexOfPointNear : List Point -> Point -> Maybe PointIndex
 indexOfPointNear points test =
     let
-        distance : Point -> Point -> Float
-        distance ( x1, y1 ) ( x2, y2 ) =
-            let
-                square x =
-                    x * x
-            in
-                sqrt (square (abs (x2 - x1)) + square (abs (y2 - y1)))
-
         indexedDistance : ( Int, Point ) -> ( Int, Float )
         indexedDistance ( index, point ) =
             ( index, distance point test )
@@ -214,7 +192,7 @@ screenToPoint model x y =
         yOrigin =
             (toFloat model.height) / 2.0
     in
-        ( (toFloat x) - xOrigin, yOrigin - (toFloat y) )
+        fromTuple ( (toFloat x) - xOrigin, yOrigin - (toFloat y) )
 
 
 
@@ -231,23 +209,29 @@ view model =
             toFloat model.height
     in
         List.concat
-            [ viewPoints model
-            , viewEdges model.edges model.points
+            [ viewEdges model
+            , viewPoints model
+            , viewIntersections model
             ]
             |> collage model.width model.height
             |> toHtml
 
 
-highlighted : LineStyle
-highlighted =
-    { defaultLine | color = Color.red }
+highlightedColor : Color
+highlightedColor =
+    Color.green
 
 
-viewPoints : Model -> List Form
-viewPoints model =
+normalColor : Color
+normalColor =
+    Color.black
+
+
+styleForIndex : Cursor -> PointIndex -> Color
+styleForIndex cursor index =
     let
-        highlightIndex =
-            case model.cursor of
+        highlightIndex cursor =
+            case cursor of
                 Bored ->
                     Nothing
 
@@ -256,38 +240,53 @@ viewPoints model =
 
                 Dragging index ->
                     Just index
+    in
+        case highlightIndex cursor of
+            Just highlightPointIndex ->
+                if highlightPointIndex == index then
+                    highlightedColor
+                else
+                    normalColor
 
-        lineStyleForIndex index =
-            case highlightIndex of
-                Just highlightPointIndex ->
-                    if highlightPointIndex == index then
-                        highlighted
-                    else
-                        defaultLine
+            _ ->
+                normalColor
 
-                _ ->
-                    defaultLine
 
-        viewPoint index ( x, y ) =
-            circle pointRadius |> outlined (lineStyleForIndex index) |> move ( x, y )
+viewPoints : Model -> List Form
+viewPoints model =
+    let
+        viewPoint index point =
+            circle pointRadius
+                |> Collage.filled (styleForIndex model.cursor index)
+                |> move (toTuple point)
     in
         List.indexedMap viewPoint model.points
 
 
-viewEdges : List Edge -> List Point -> List Form
-viewEdges edges points =
+viewEdges : Model -> List Form
+viewEdges model =
     let
         pointArray =
-            Array.fromList points
+            Array.fromList model.points
 
         pointAt index =
             Array.get index pointArray
                 |> Maybe.withDefault fallbackPoint
+                |> toTuple
 
         viewEdge { from, to } =
-            segment (pointAt from) (pointAt to) |> traced defaultLine
+            segment (pointAt from) (pointAt to) |> traced { defaultLine | width = 2 }
     in
-        List.map viewEdge edges
+        List.map viewEdge model.edges
+
+
+viewIntersections : Model -> List Form
+viewIntersections model =
+    let
+        viewIntersection point =
+            circle 4 |> outlined { defaultLine | color = Color.red } |> move (toTuple point)
+    in
+        List.map viewIntersection (allIntersections model.points model.edges)
 
 
 pointByIndex : List Point -> Int -> Point

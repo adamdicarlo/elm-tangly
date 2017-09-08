@@ -4,23 +4,8 @@ import Math.Vector2 exposing (fromTuple, vec2)
 import Test exposing (Test, describe, test, todo, skip, only)
 import Expect
 import String
-import Edge exposing (allIntersections, bisect, intersect, nearlyEqual)
+import Edge exposing (allIntersections, intersect, nearlyEqual)
 import Types exposing (Edge)
-
-
-bisectTests : Test
-bisectTests =
-    describe "bisect"
-        [ test "with a horizontal line" <|
-            \_ ->
-                Expect.equal (bisect (vec2 0 0) (vec2 100 0)) (vec2 50 0)
-        , test "with a vertical line" <|
-            \_ ->
-                Expect.equal (bisect (vec2 0 0) (vec2 0 100)) (vec2 0 50)
-        , test "with an offset, diagonal line" <|
-            \_ ->
-                Expect.equal (bisect (vec2 10 10) (vec2 20 20)) (vec2 15 15)
-        ]
 
 
 intersectVerticalCollinearSegmentsTests : Test

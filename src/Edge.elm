@@ -29,22 +29,8 @@ allIntersections allPoints allEdges =
         intersections allEdges
 
 
-bisect : Point -> Point -> Point
-bisect p q =
-    let
-        ( x1, y1 ) =
-            toTuple p
-
-        ( x2, y2 ) =
-            toTuple q
-    in
-        fromTuple ( x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2 )
-
-
-
--- no cross product for Vec2 defined in Math.Vector2 :(
-
-
+{-| No cross product for Vec2 defined in Math.Vector2 :(
+-}
 cross : Vec2 -> Vec2 -> Float
 cross v w =
     (getX v) * (getY w) - (getY v) * (getX w)
@@ -65,9 +51,21 @@ intersect points r s =
             Array.get index pointArray
                 |> Maybe.withDefault fallbackPoint
     in
-        intersectSegments (pointAt r.from) (pointAt r.to) (pointAt s.from) (pointAt s.to)
+        if (Debug.log "r.from" r.from) == s.from || r.from == s.to || r.to == s.from || r.to == s.to then
+            -- Ignore when both edges share a point; otherwise every single point is considered an
+            -- intersection. But what if the edges overlap? Any two edges ("A" and "B") can only
+            -- share at most a single point, so the non-shared point of one of them will be flagged
+            -- as an intersection when the other edge _it_ is attached to is checked against A or B.
+            Nothing
+        else
+            intersectSegments (pointAt r.from) (pointAt r.to) (pointAt s.from) (pointAt s.to)
 
 
+{-| Find the intersection point of two line segments
+
+    Uses the technique described at <https://stackoverflow.com/a/565282>.
+
+-}
 intersectSegments : Point -> Point -> Point -> Point -> Maybe Point
 intersectSegments p pr q qs =
     let
@@ -116,18 +114,14 @@ intersectSegments p pr q qs =
                         -- One line is contained within the other; just use the midpoint of the
                         -- smaller line -- in this case, the second.
                         Just (add q (scale 0.5 s))
-                    else if 0 <= t_min && t_min <= 1 then
+                    else if isBetween 0 1 t_min then
                         let
                             midpoint =
                                 t_min + (1 - t_min) / 2
                         in
                             Just (add p (scale midpoint r))
-                    else if 0 <= t_max && t_max <= 1 then
-                        let
-                            midpoint =
-                                t_max / 2
-                        in
-                            Just (add p (scale midpoint r))
+                    else if isBetween 0 1 t_max then
+                        Just (add p (scale (t_max / 2) r))
                     else
                         Nothing
 
@@ -150,6 +144,11 @@ intersectSegments p pr q qs =
                         Nothing
 
 
+isBetween : number -> number -> number -> Bool
+isBetween min max value =
+    clamp min max value == value
+
+
 floatThreshold : Float
 floatThreshold =
     1.0e-7
@@ -158,43 +157,6 @@ floatThreshold =
 isZero : Float -> Bool
 isZero x =
     abs x < floatThreshold
-
-
-
--- intersectVerticalSegments : Float -> Float -> Float -> Float -> Float -> Float -> Maybe Point
--- intersectVerticalSegments x01 y0 y1 x23 y2 y3 =
---     let
---         -- sort the y coordinates to make comparisons easier
---         ( a0, a1 ) =
---             if y0 <= y1 then
---                 ( y0, y1 )
---             else
---                 ( y1, y0 )
---         ( b0, b1 ) =
---             if y2 <= y3 then
---                 ( y2, y3 )
---             else
---                 ( y3, y2 )
---     in
---         -- If both segments are on the same column (~equal x coords), determine whether there is
---         -- over lap, and the "point" to label as the overlap (the center of the pieces that overlap)
---         if nearlyEqual x01 x23 then
---             -- 'a' contained within 'b'?
---             if b0 <= a0 && a1 <= b1 then
---                 Just ( x01, a0 + (a1 - a0) / 2 )
---                 -- 'b' contained within 'a'?
---             else if a0 <= b0 && b1 <= a1 then
---                 Just ( x01, b0 + (b1 - b0) / 2 )
---                 -- left side of 'a' within 'b'?
---             else if b0 <= a0 && a0 <= b1 then
---                 Just ( x01, a0 + (b1 - a0) / 2 )
---                 -- right side of 'a' within 'b'?
---             else if b0 <= a1 && a1 <= b1 then
---                 Just ( x01, b0 + (a1 - b0) / 2 )
---             else
---                 Nothing
---         else
---             Nothing
 
 
 nearlyEqual : Float -> Float -> Bool

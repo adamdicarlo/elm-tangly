@@ -103,39 +103,33 @@ intersectSegments p pr q qs =
                         t0 + (dot s r) / r_dot_r
 
                     t_min =
-                        Debug.log "t min" <| min t0 t1
+                        min t0 t1
 
                     t_max =
-                        Debug.log "t max" <| max t0 t1
-
-                    ( p_dy, p_dx ) =
-                        ( getY r, getX r )
-
-                    ( q_dy, q_dx ) =
-                        ( getY s, getX s )
+                        max t0 t1
                 in
                     if t_min < 0 && t_max > 1 then
                         -- One line is contained within the other; just use the midpoint of the
                         -- smaller line -- in this case, the first.
-                        Just (vec2 (getX p + p_dx / 2) (getY p + p_dy / 2))
+                        Just (add p (scale 0.5 r))
                     else if t_min >= 0 && t_max <= 1 then
                         -- One line is contained within the other; just use the midpoint of the
                         -- smaller line -- in this case, the second.
-                        Just (vec2 (getX q + q_dx / 2) (getY q + q_dy / 2))
+                        Just (add q (scale 0.5 s))
                     else if 0 <= t_min && t_min <= 1 then
                         let
                             midpoint =
                                 t_min + (1 - t_min) / 2
                         in
-                            Just (vec2 (getX p + p_dx * midpoint) (getY p + p_dy * midpoint))
+                            Just (add p (scale midpoint r))
                     else if 0 <= t_max && t_max <= 1 then
                         let
                             midpoint =
                                 t_max / 2
                         in
-                            Just (vec2 (getX p + p_dx * midpoint) (getY p + p_dy * midpoint))
+                            Just (add p (scale midpoint r))
                     else
-                        Debug.log "Hmmmm" Nothing
+                        Nothing
 
             ( True, False ) ->
                 -- Lines are parallel (and non-intersecting)

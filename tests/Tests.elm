@@ -33,6 +33,61 @@ intersectVerticalCollinearSegmentsTests =
                         [ (vec2 -5 5), (vec2 -5 0), (vec2 -5 8), (vec2 -5 4) ]
                 in
                     Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Just (vec2 -5 4.5)
+        , test "that intersect, second below first" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 -5 8), (vec2 -5 4), (vec2 -5 5), (vec2 -5 0) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Just (vec2 -5 4.5)
+        , test "that do NOT intersect, first below second" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 -5 5), (vec2 -5 0), (vec2 -5 8), (vec2 -5 6) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
+        , test "that do NOT intersect, second below first" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 -5 8), (vec2 -5 6), (vec2 -5 5), (vec2 -5 0) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
+        ]
+
+
+intersectParallelSegmentsTests : Test
+intersectParallelSegmentsTests =
+    describe "intersect with non-intersecting parallel segments"
+        [ test "that are vertical" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 5 0), (vec2 5 10), (vec2 0 0), (vec2 0 10) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
+        , test "that are horizontal" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 0 0), (vec2 5 0), (vec2 0 -5), (vec2 6 -5) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
+        , test "that are slanted up-right" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 0 0), (vec2 7 7), (vec2 1 0), (vec2 8 7) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
+        , test "that are slanted down-right" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 0 7), (vec2 7 0), (vec2 1 8), (vec2 8 1) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
         ]
 
 
@@ -46,6 +101,20 @@ intersectSlantedCollinearSegmentsTests =
                         [ (vec2 1 1), (vec2 10 10), (vec2 5 5), (vec2 15 15) ]
                 in
                     Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Just (vec2 7.5 7.5)
+        , test "that do NOT intersect, second above-right of first" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 1 1), (vec2 10 10), (vec2 10.1 10.1), (vec2 15 15) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
+        , test "that do NOT intersect, first above-right of second" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 10.1 10.1), (vec2 15 15), (vec2 1 1), (vec2 10 10) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
         ]
 
 
@@ -59,11 +128,25 @@ intersectSlantedSegmentsTests =
                         [ (vec2 1 1), (vec2 10 10), (vec2 1 10), (vec2 10 1) ]
                 in
                     Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Just (vec2 5.5 5.5)
-        , test "and do NOT intersect" <|
+        , test "that intersect (2)" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 0 0), (vec2 5 10), (vec2 0 5), (vec2 5 5) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Just (vec2 2.5 5)
+        , test "that do NOT intersect" <|
             \_ ->
                 let
                     points =
                         [ (vec2 1 1), (vec2 10 10), (vec2 2 1), (vec2 11 10) ]
+                in
+                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
+        , test "that do NOT intersect (2)" <|
+            \_ ->
+                let
+                    points =
+                        [ (vec2 0 0), (vec2 5 10), (vec2 0.1 0), (vec2 5.1 9.9) ]
                 in
                     Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Nothing
         ]
@@ -260,4 +343,7 @@ nearlyEqualTests =
         , test "identifies NOT nearly-equal numbers" <|
             \_ ->
                 Expect.equal (nearlyEqual 5.0 -5.0) False
+        , test "identifies exactly-equal numbers" <|
+            \_ ->
+                Expect.equal (nearlyEqual 7 7) True
         ]

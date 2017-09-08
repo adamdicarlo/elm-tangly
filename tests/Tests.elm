@@ -8,15 +8,6 @@ import Edge exposing (allIntersections, bisect, intersect, nearlyEqual)
 import Types exposing (Edge)
 
 
-all : Test
-all =
-    describe "Edge module"
-        [ bisectTests
-        , intersectTests
-        , nearlyEqualTests
-        ]
-
-
 bisectTests : Test
 bisectTests =
     describe "bisect"
@@ -32,29 +23,10 @@ bisectTests =
         ]
 
 
-intersectTests : Test
-intersectTests =
-    describe "intersect"
-        [ intersectCollinearSegmentsTests
-        , intersectSlantedSegmentsTests
-        , skip intersectHorizontalSegmentsTests
-        , skip intersectVerticalSegmentsTests
-        ]
-
-
-intersectCollinearSegmentsTests : Test
-intersectCollinearSegmentsTests =
-    describe "collinear lines"
-        [ intersectHorizontalCollinearSegmentsTests
-        , intersectVerticalCollinearSegmentsTests
-        , intersectSlantedCollinearSegmentsTests
-        ]
-
-
 intersectVerticalCollinearSegmentsTests : Test
 intersectVerticalCollinearSegmentsTests =
-    describe "that are vertical"
-        [ test "and DO intersect, first below second" <|
+    describe "intersect with vertical segments"
+        [ test "that intersect, first below second" <|
             \_ ->
                 let
                     points =
@@ -66,8 +38,8 @@ intersectVerticalCollinearSegmentsTests =
 
 intersectSlantedCollinearSegmentsTests : Test
 intersectSlantedCollinearSegmentsTests =
-    describe "that are slanted"
-        [ test "and DO intersect" <|
+    describe "intersect with slanted, collinear segments"
+        [ test "that intersect" <|
             \_ ->
                 let
                     points =
@@ -79,8 +51,8 @@ intersectSlantedCollinearSegmentsTests =
 
 intersectSlantedSegmentsTests : Test
 intersectSlantedSegmentsTests =
-    describe "that are slanted"
-        [ test "and DO intersect" <|
+    describe "intersect with slanted segments"
+        [ test "that intersect" <|
             \_ ->
                 let
                     points =
@@ -99,7 +71,7 @@ intersectSlantedSegmentsTests =
 
 intersectHorizontalCollinearSegmentsTests : Test
 intersectHorizontalCollinearSegmentsTests =
-    describe "that are horizontal"
+    describe "intersect with horizontal, collinear segments"
         [ test "that DO intersect, first left of second" <|
             \_ ->
                 let
@@ -145,22 +117,9 @@ intersectHorizontalCollinearSegmentsTests =
         ]
 
 
-intersectArbitrarySegmentsTests : Test
-intersectArbitrarySegmentsTests =
-    describe "with two arbitrary lines"
-        [ test "that DO intersect" <|
-            \_ ->
-                let
-                    points =
-                        [ (vec2 -5 -5), (vec2 0 -5), (vec2 -2 -5), (vec2 3 -5) ]
-                in
-                    Expect.equal (intersect points (Edge 0 1) (Edge 2 3)) <| Just (vec2 0 -4)
-        ]
-
-
 intersectHorizontalSegmentsTests : Test
 intersectHorizontalSegmentsTests =
-    describe "with two horizontal lines"
+    describe "intersect horizontal lines"
         [ test "that DO NOT intersect" <|
             \_ ->
                 let
@@ -231,7 +190,7 @@ intersectHorizontalSegmentsTests =
 
 intersectVerticalSegmentsTests : Test
 intersectVerticalSegmentsTests =
-    describe "with two vertical lines"
+    describe "intersect vertical lines"
         [ test "that DO NOT intersect, first BELOW second" <|
             \_ ->
                 let

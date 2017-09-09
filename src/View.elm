@@ -4,7 +4,9 @@ import Array
 import Color exposing (Color)
 import Collage exposing (Form, collage, circle, defaultLine, move, outlined, segment, traced)
 import Element exposing (toHtml)
-import Html exposing (Html)
+import Html exposing (Html, button, div, text)
+import Html.Attributes exposing (class)
+import Html.Events exposing (onClick)
 import Math.Vector2 exposing (toTuple, vec2)
 import Constants exposing (pointRadius)
 import Edge exposing (allIntersections)
@@ -12,7 +14,7 @@ import Types
     exposing
         ( Cursor(Bored, Dragging, Hovering)
         , Model
-        , Msg
+        , Msg(NextLevel)
         , Point
         , PointIndex
         )
@@ -31,14 +33,23 @@ view model =
 
         height =
             toFloat model.height
+
+        intersections =
+            allIntersections model.points model.edges
+
+        canvas =
+            List.concat
+                [ viewEdges model
+                , viewPoints model
+                , viewIntersections model intersections
+                ]
+                |> collage model.width model.height
+                |> toHtml
     in
-        List.concat
-            [ viewEdges model
-            , viewPoints model
-            , viewIntersections model
+        div [ class "tangly" ]
+            [ canvas
+            , viewHUD model intersections
             ]
-            |> collage model.width model.height
-            |> toHtml
 
 
 highlightedColor : Color
@@ -104,10 +115,49 @@ viewEdges model =
         List.map viewEdge model.edges
 
 
-viewIntersections : Model -> List Form
-viewIntersections model =
+viewIntersections : Model -> List Point -> List Form
+viewIntersections model intersections =
     let
         viewIntersection point =
             circle 4 |> outlined { defaultLine | color = Color.red } |> move (toTuple point)
     in
-        List.map viewIntersection (allIntersections model.points model.edges)
+        List.map viewIntersection intersections
+
+
+pluralize : String -> String -> number -> String
+pluralize singular plural count =
+    if count == 1 then
+        singular
+    else
+        plural
+
+
+viewHUD : Model -> List Point -> Html Msg
+viewHUD model intersections =
+    let
+        count =
+            List.length intersections
+
+        level =
+            div [ class "level" ] [ text <| "Level " ++ (toString model.levelNumber) ]
+
+        progress =
+            div [ class "progress" ]
+                [ text <|
+                    toString count
+                        ++ " "
+                        ++ (pluralize "intersection" "intersections" count)
+                ]
+
+        solved =
+            if model.levelSolved then
+                [ div [ class "solved" ]
+                    [ text "Solved!"
+                    , button [ class "btn-3d red", onClick NextLevel ] [ text "Next level →" ]
+                    ]
+                ]
+            else
+                []
+    in
+        div [ class "hud" ]
+            (div [ class "status-container" ] [ level, progress ] :: solved)

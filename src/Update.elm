@@ -1,9 +1,11 @@
 module Update exposing (init, update)
 
+import Array
 import Task exposing (perform)
 import Math.Vector2 exposing (Vec2, distance, fromTuple, toTuple, vec2)
 import Window
-import Constants exposing (level1, pointRadius)
+import Constants exposing (edgesForLevel, pointsForLevel, pointRadius)
+import Edge exposing (allIntersections)
 import Types exposing (Cursor(..), Model, Msg(..), Point, PointIndex)
 
 
@@ -11,9 +13,14 @@ init : ( Model, Cmd Msg )
 init =
     ( { width = 0
       , height = 0
-      , points = level1.points
-      , edges = level1.edges
+      , points = pointsForLevel 1
+      , edges = edgesForLevel 1
       , cursor = Bored
+      , levelNumber = 1
+
+      -- "Latch" whether this level has been solved, so the user can play around (and
+      -- un-solve the puzzle) without having to re-solve to advance to the next level
+      , levelSolved = False
       }
     , perform WindowSize Window.size
     )
@@ -64,6 +71,22 @@ update msg model =
 
                         value ->
                             value
+                , levelSolved =
+                    case model.levelSolved of
+                        True ->
+                            True
+
+                        False ->
+                            List.length (allIntersections model.points model.edges) == 0
+            }
+                ! []
+
+        NextLevel ->
+            { model
+                | points = pointsForLevel (model.levelNumber + 1)
+                , edges = edgesForLevel (model.levelNumber + 1)
+                , levelNumber = model.levelNumber + 1
+                , levelSolved = False
             }
                 ! []
 

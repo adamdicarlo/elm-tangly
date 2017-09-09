@@ -17,6 +17,8 @@ type alias Model =
     , points : List Point
     , edges : List Edge
     , cursor : Cursor
+    , levelNumber : Int
+    , levelSolved : Bool
     }
 
 
@@ -38,5 +40,6 @@ type Msg
     = MouseDown Mouse.Position
     | MouseMove Mouse.Position
     | MouseUp Mouse.Position
+    | NextLevel
     | NoOp
     | WindowSize Window.Size

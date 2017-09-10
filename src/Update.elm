@@ -32,11 +32,8 @@ update msg model =
     case msg of
         MouseDown { x, y } ->
             let
-                nearPoint =
-                    indexOfPointNear model.points (screenToPoint model x y)
-
                 cursor =
-                    nearPoint
+                    indexOfPointNear model.points (screenToPoint model x y)
                         |> Maybe.map Dragging
                         |> Maybe.withDefault Bored
             in
@@ -53,11 +50,8 @@ update msg model =
 
                     _ ->
                         let
-                            nearPoint =
-                                indexOfPointNear model.points mousePoint
-
                             cursor =
-                                nearPoint
+                                indexOfPointNear model.points mousePoint
                                     |> Maybe.map Hovering
                                     |> Maybe.withDefault Bored
                         in
@@ -73,12 +67,9 @@ update msg model =
                         value ->
                             value
                 , levelSolved =
-                    case model.levelSolved of
-                        True ->
-                            True
-
-                        False ->
-                            List.length (allIntersections model.points model.edges) == 0
+                    model.levelSolved
+                        || List.length (allIntersections model.points model.edges)
+                        == 0
             }
                 ! []
 

@@ -18,6 +18,10 @@ pre {
   padding: 1em;
 }
 
+.icon {
+  margin-right: 0.75em;
+}
+
 .hud {
   position: absolute;
   bottom: 0;
@@ -27,6 +31,7 @@ pre {
   padding: .5em 1em;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 
   background-color: #7fccde;
   border-top-right-radius: 6px;
@@ -70,6 +75,7 @@ pre {
 
 .statusContainer {
   display: flex;
+  height: 100%;
   flex-direction: column;
   justify-content: space-evenly;
 }

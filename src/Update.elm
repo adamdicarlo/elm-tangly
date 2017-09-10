@@ -6,7 +6,15 @@ import Math.Vector2 exposing (Vec2, distance, fromTuple, toTuple, vec2)
 import Window
 import Constants exposing (edgesForLevel, pointsForLevel, pointRadius)
 import Edge exposing (allIntersections)
-import Types exposing (Cursor(..), Model, Msg(..), Point, PointIndex)
+import Types
+    exposing
+        ( Cursor(..)
+        , Mode(Edit, Play)
+        , Model
+        , Msg(..)
+        , Point
+        , PointIndex
+        )
 
 
 init : ( Model, Cmd Msg )
@@ -22,6 +30,7 @@ init =
       -- "Latch" whether this level has been solved, so the user can play around (and
       -- un-solve the puzzle) without having to re-solve to advance to the next level
       , levelSolved = False
+      , mode = Play
       }
     , perform WindowSize Window.size
     )
@@ -84,6 +93,12 @@ update msg model =
 
         NoOp ->
             model ! []
+
+        EditMode ->
+            { model | mode = Edit } ! []
+
+        PlayMode ->
+            { model | mode = Play } ! []
 
         ToggleLevelCodeModal ->
             { model

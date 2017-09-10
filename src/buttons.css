@@ -5,7 +5,7 @@
   position: relative;
   display: inline-block;
   font-size: 22px;
-  padding: 18px 50px;
+  padding: 18px 36px;
   color: white;
   margin: 0 0 0 1em;
   border: none;
@@ -17,6 +17,12 @@
   cursor: pointer;
   outline: none;
 }
+
+.btn-3d.small {
+  font-size: 16px;
+  padding: 9px 18px 10px;
+}
+
 .btn-3d.red:hover    {background-color: #e74c3c;}
 .btn-3d.blue:hover   {background-color: #699DD1;}
 .btn-3d.green:hover  {background-color: #80C49D;}

@@ -20,6 +20,7 @@ type alias Model =
     , levelCodeModalActive : Bool
     , levelNumber : Int
     , levelSolved : Bool
+    , mode : Mode
     }
 
 
@@ -37,11 +38,18 @@ type Cursor
     | Dragging PointIndex
 
 
+type Mode
+    = Edit
+    | Play
+
+
 type Msg
-    = MouseDown Mouse.Position
+    = EditMode
+    | MouseDown Mouse.Position
     | MouseMove Mouse.Position
     | MouseUp Mouse.Position
     | NextLevel
     | NoOp
+    | PlayMode
     | ToggleLevelCodeModal
     | WindowSize Window.Size

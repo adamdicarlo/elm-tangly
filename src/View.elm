@@ -4,7 +4,7 @@ import Array
 import Color exposing (Color)
 import Collage exposing (Form, collage, circle, defaultLine, move, outlined, segment, traced)
 import Element exposing (toHtml)
-import Html exposing (Html, button, code, div, pre, text)
+import Html exposing (Html, button, code, div, pre, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Math.Vector2 exposing (toTuple, vec2)
@@ -14,8 +14,9 @@ import Types
     exposing
         ( Cursor(Bored, Dragging, Hovering)
         , Edge
+        , Mode(Edit, Play)
         , Model
-        , Msg(NextLevel, ToggleLevelCodeModal)
+        , Msg(EditMode, NextLevel, PlayMode, ToggleLevelCodeModal)
         , Point
         , PointIndex
         )
@@ -151,21 +152,50 @@ viewHUD model intersections =
                         ++ (pluralize "intersection" "intersections" count)
                 ]
 
-        solved =
-            if model.levelSolved then
-                [ div [ class "solved" ]
-                    [ text "Solved!"
-                    , button [ class "btn-3d red", onClick NextLevel ] [ text "Next level →" ]
-                    ]
-                ]
-            else
-                [ div []
-                    [ button [ class "btn-3d green", onClick ToggleLevelCodeModal ] [ text "Level Code" ]
-                    ]
-                ]
+        status =
+            div [ class "statusContainer" ] [ level, progress ]
+
+        actions =
+            div [ class "action" ]
+                (case model.mode of
+                    Play ->
+                        if model.levelSolved then
+                            [ iconLabel "🎊" "Solved!"
+                            , nextLevelButton
+                            ]
+                        else
+                            [ editButton ]
+
+                    Edit ->
+                        [ playButton, levelCodeButton ]
+                )
     in
-        div [ class "hud" ]
-            (div [ class "statusContainer" ] [ level, progress ] :: solved)
+        div [ class "hud" ] [ status, actions ]
+
+
+iconLabel : String -> String -> Html Msg
+iconLabel icon label =
+    span [] [ span [ class "icon" ] [ text icon ], span [] [ text label ] ]
+
+
+editButton : Html Msg
+editButton =
+    button [ class "small red btn-3d", onClick EditMode ] [ iconLabel "🔧" "Edit" ]
+
+
+levelCodeButton : Html Msg
+levelCodeButton =
+    button [ class "small green btn-3d", onClick ToggleLevelCodeModal ] [ iconLabel "👾" "Code" ]
+
+
+nextLevelButton : Html Msg
+nextLevelButton =
+    button [ class "btn-3d red", onClick NextLevel ] [ text "Next level →" ]
+
+
+playButton : Html Msg
+playButton =
+    button [ class "small red btn-3d", onClick PlayMode ] [ iconLabel "🎮" "Play" ]
 
 
 viewLevelCodeModal : Model -> Html Msg

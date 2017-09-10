@@ -17,6 +17,7 @@ type alias Model =
     , points : List Point
     , edges : List Edge
     , cursor : Cursor
+    , levelCodeModalActive : Bool
     , levelNumber : Int
     , levelSolved : Bool
     }
@@ -42,4 +43,5 @@ type Msg
     | MouseUp Mouse.Position
     | NextLevel
     | NoOp
+    | ToggleLevelCodeModal
     | WindowSize Window.Size

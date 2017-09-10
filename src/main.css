@@ -11,6 +11,13 @@ body {
   margin: 0;
 }
 
+pre {
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  margin-top: 0;
+  padding: 1em;
+}
+
 .hud {
   position: absolute;
   bottom: 0;
@@ -33,7 +40,35 @@ body {
   user-select: none;
 }
 
-.status-container {
+.levelCodeModalBackdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.levelCodeModal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 30em;
+  max-height: 90%;
+  padding: 20px;
+
+  background-color: white;
+  border-radius: 6px;
+}
+
+.levelCodeModal pre {
+  width: 100%;
+}
+
+.statusContainer {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;

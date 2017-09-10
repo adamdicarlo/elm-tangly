@@ -16,6 +16,7 @@ init =
       , points = pointsForLevel 1
       , edges = edgesForLevel 1
       , cursor = Bored
+      , levelCodeModalActive = False
       , levelNumber = 1
 
       -- "Latch" whether this level has been solved, so the user can play around (and
@@ -92,6 +93,13 @@ update msg model =
 
         NoOp ->
             model ! []
+
+        ToggleLevelCodeModal ->
+            { model
+                | cursor = Bored
+                , levelCodeModalActive = not model.levelCodeModalActive
+            }
+                ! []
 
         WindowSize { width, height } ->
             { model | width = width, height = height } ! []

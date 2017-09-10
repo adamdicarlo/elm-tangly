@@ -4,7 +4,7 @@ import Array
 import Color exposing (Color)
 import Collage exposing (Form, collage, circle, defaultLine, move, outlined, segment, traced)
 import Element exposing (toHtml)
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, button, code, div, pre, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Math.Vector2 exposing (toTuple, vec2)
@@ -13,8 +13,9 @@ import Edge exposing (allIntersections)
 import Types
     exposing
         ( Cursor(Bored, Dragging, Hovering)
+        , Edge
         , Model
-        , Msg(NextLevel)
+        , Msg(NextLevel, ToggleLevelCodeModal)
         , Point
         , PointIndex
         )
@@ -49,6 +50,7 @@ view model =
         div [ class "tangly" ]
             [ canvas
             , viewHUD model intersections
+            , viewLevelCodeModal model
             ]
 
 
@@ -157,7 +159,73 @@ viewHUD model intersections =
                     ]
                 ]
             else
-                []
+                [ div []
+                    [ button [ class "btn-3d green", onClick ToggleLevelCodeModal ] [ text "Level Code" ]
+                    ]
+                ]
     in
         div [ class "hud" ]
-            (div [ class "status-container" ] [ level, progress ] :: solved)
+            (div [ class "statusContainer" ] [ level, progress ] :: solved)
+
+
+viewLevelCodeModal : Model -> Html Msg
+viewLevelCodeModal model =
+    if model.levelCodeModalActive then
+        div [ class "levelCodeModalBackdrop" ]
+            [ div [ class "levelCodeModal" ]
+                [ pre []
+                    [ text <| levelToCode model
+                    ]
+                , button [ class "btn-3d green", onClick ToggleLevelCodeModal ] [ text "OK" ]
+                ]
+            ]
+    else
+        div [] []
+
+
+levelToCode : Model -> String
+levelToCode model =
+    let
+        varName =
+            "level" ++ (toString model.levelNumber)
+
+        showEdge : Edge -> String
+        showEdge { from, to } =
+            "Edge " ++ (toString from) ++ " " ++ (toString to)
+
+        showPoint p =
+            let
+                ( x, y ) =
+                    toTuple p
+            in
+                "vec2 " ++ (toString x) ++ " " ++ (toString y)
+
+        joinCodeLines a b =
+            a
+                ++ "\n        "
+                ++ (if String.length b > 0 then
+                        ", "
+                    else
+                        ""
+                   )
+                ++ b
+
+        points =
+            List.map showPoint model.points
+                |> List.foldl joinCodeLines ""
+
+        edges =
+            List.map showEdge model.edges
+                |> List.foldl joinCodeLines ""
+    in
+        varName
+            ++ " : Level\n"
+            ++ varName
+            ++ " ="
+            ++ "\n    { edges =\n"
+            ++ "        [ "
+            ++ edges
+            ++ "]\n    , points =\n"
+            ++ "        [ "
+            ++ points
+            ++ "]\n    }\n"

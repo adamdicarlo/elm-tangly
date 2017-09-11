@@ -1,18 +1,24 @@
 module Edge exposing (..)
 
 import Array
-import Tuple exposing (first, second)
+import Dict exposing (Dict)
 import Math.Vector2 exposing (Vec2, add, dot, fromTuple, getX, getY, scale, sub, toTuple, vec2)
 import Types
     exposing
         ( Edge
+        , EdgeId
         , Point
+        , PointId
         )
 
 
-allIntersections : List Point -> List Edge -> List Point
+allIntersections : Dict PointId Point -> Dict EdgeId Edge -> List Point
 allIntersections allPoints allEdges =
     let
+        points : List Point
+        points =
+            Dict.values allPoints
+
         intersections : List Edge -> List Point
         intersections remainingEdges =
             case remainingEdges of
@@ -23,10 +29,10 @@ allIntersections allPoints allEdges =
                     []
 
                 edge :: rest ->
-                    List.filterMap (intersect allPoints edge) rest
+                    List.filterMap (intersect points edge) rest
                         ++ intersections rest
     in
-        intersections allEdges
+        intersections (Dict.values allEdges)
 
 
 {-| No cross product for Vec2 defined in Math.Vector2 :(

@@ -1,19 +1,21 @@
 module Update exposing (init, update)
 
-import Array
+import Dict exposing (Dict)
 import Task exposing (perform)
-import Math.Vector2 exposing (Vec2, distance, fromTuple, toTuple, vec2)
 import Window
-import Constants exposing (edgesForLevel, pointsForLevel, pointRadius)
+import Constants exposing (edgesForLevel, pointsForLevel)
 import Edge exposing (allIntersections)
+import Model exposing (findPointNear, screenToPoint)
 import Types
     exposing
         ( Cursor(..)
+        , Edge
+        , EdgeId
         , Mode(Edit, Play)
         , Model
         , Msg(..)
         , Point
-        , PointIndex
+        , PointId
         )
 
 
@@ -30,7 +32,9 @@ init =
       -- "Latch" whether this level has been solved, so the user can play around (and
       -- un-solve the puzzle) without having to re-solve to advance to the next level
       , levelSolved = False
-      , mode = Play
+      , mode = Edit --Play
+      , selectedEdges = Dict.empty
+      , selectedPoints = Dict.empty
       }
     , perform WindowSize Window.size
     )
@@ -39,14 +43,39 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Delete ->
+            { model
+                | cursor = Bored
+                , edges =
+                    -- first delete the edges that were selected
+                    deleteEdges model.selectedEdges model.edges
+                        -- then delete edges that reference deleted points
+                        |> deleteEdgesWithPoints model.selectedPoints
+                , points = deletePoints model.selectedPoints model.points
+                , selectedEdges = Dict.empty
+                , selectedPoints = Dict.empty
+            }
+                ! []
+
         MouseDown { x, y } ->
             let
-                cursor =
-                    indexOfPointNear model.points (screenToPoint model x y)
-                        |> Maybe.map Dragging
-                        |> Maybe.withDefault Bored
+                pointId =
+                    findPointNear model.points (screenToPoint model x y)
             in
-                { model | cursor = cursor } ! []
+                { model
+                    | cursor =
+                        pointId
+                            |> Maybe.map Dragging
+                            |> Maybe.withDefault Bored
+                    , selectedPoints =
+                        case pointId of
+                            Just id ->
+                                Dict.singleton id ()
+
+                            Nothing ->
+                                Dict.empty
+                }
+                    ! []
 
         MouseMove { x, y } ->
             let
@@ -54,13 +83,13 @@ update msg model =
                     screenToPoint model x y
             in
                 case model.cursor of
-                    Dragging index ->
-                        (updateDragPoint model index mousePoint) ! []
+                    Dragging id ->
+                        (updateDragPoint model id mousePoint) ! []
 
                     _ ->
                         let
                             cursor =
-                                indexOfPointNear model.points mousePoint
+                                findPointNear model.points mousePoint
                                     |> Maybe.map Hovering
                                     |> Maybe.withDefault Bored
                         in
@@ -70,8 +99,8 @@ update msg model =
             { model
                 | cursor =
                     case model.cursor of
-                        Dragging index ->
-                            Hovering index
+                        Dragging id ->
+                            Hovering id
 
                         value ->
                             value
@@ -111,55 +140,28 @@ update msg model =
             { model | width = width, height = height } ! []
 
 
-indexPoints : List Point -> List ( Int, Point )
-indexPoints points =
-    -- Zip up an index with each point: [(0, (x, y)), (1, (x, y)), ...]
-    List.map2 (,) (List.range 0 (List.length points - 1)) points
+deleteEdges : Dict EdgeId () -> Dict EdgeId Edge -> Dict EdgeId Edge
+deleteEdges doomed edges =
+    edges
 
 
-indexOfPointNear : List Point -> Point -> Maybe PointIndex
-indexOfPointNear points test =
+deleteEdgesWithPoints : Dict PointId () -> Dict EdgeId Edge -> Dict EdgeId Edge
+deleteEdgesWithPoints points edges =
+    edges
+
+
+deletePoints : Dict PointId () -> Dict PointId Point -> Dict PointId Point
+deletePoints doomed points =
+    points
+
+
+updateDragPoint : Model -> PointId -> Point -> Model
+updateDragPoint model id newValue =
     let
-        indexedDistance : ( Int, Point ) -> ( Int, Float )
-        indexedDistance ( index, point ) =
-            ( index, distance point test )
-
-        closest =
-            -- Determine distance between `test` and each point and sort distances
-            List.map indexedDistance (indexPoints points)
-                |> List.sortBy Tuple.second
-                |> List.head
+        updater =
+            Maybe.map (\_ -> newValue)
     in
-        case closest of
-            Nothing ->
-                Nothing |> Debug.log "Bug! indexOfPointNear received empty list?"
-
-            Just ( closestIndex, closestDistance ) ->
-                if closestDistance < pointRadius then
-                    Just closestIndex
-                else
-                    Nothing
-
-
-screenToPoint : Model -> Int -> Int -> Point
-screenToPoint model x y =
-    let
-        xOrigin =
-            (toFloat model.width) / 2.0
-
-        yOrigin =
-            (toFloat model.height) / 2.0
-    in
-        fromTuple ( (toFloat x) - xOrigin, yOrigin - (toFloat y) )
-
-
-updateDragPoint : Model -> PointIndex -> Point -> Model
-updateDragPoint model index newValue =
-    { model
-        | points =
-            List.concat
-                [ List.take index model.points
-                , [ newValue ]
-                , List.drop (index + 1) model.points
-                ]
-    }
+        { model
+            | points =
+                Dict.update id updater model.points
+        }

@@ -1,8 +1,8 @@
 module View exposing (view)
 
-import Array
 import Color exposing (Color)
-import Collage exposing (Form, collage, circle, defaultLine, move, outlined, segment, traced)
+import Dict exposing (Dict, isEmpty)
+import Collage exposing (Form, collage, circle, defaultLine, move, outlined, rect, segment, traced)
 import Element exposing (toHtml)
 import Html exposing (Html, button, code, div, pre, span, text)
 import Html.Attributes exposing (class)
@@ -14,11 +14,12 @@ import Types
     exposing
         ( Cursor(Bored, Dragging, Hovering)
         , Edge
+        , EdgeId
         , Mode(Edit, Play)
         , Model
-        , Msg(EditMode, NextLevel, PlayMode, ToggleLevelCodeModal)
+        , Msg(Delete, EditMode, NextLevel, PlayMode, ToggleLevelCodeModal)
         , Point
-        , PointIndex
+        , PointId
         )
 
 
@@ -55,8 +56,8 @@ view model =
             ]
 
 
-highlightedColor : Color
-highlightedColor =
+hoverDragColor : Color
+hoverDragColor =
     Color.green
 
 
@@ -65,24 +66,30 @@ normalColor =
     Color.black
 
 
-styleForIndex : Cursor -> PointIndex -> Color
-styleForIndex cursor index =
+selectedColor : Color
+selectedColor =
+    Color.red
+
+
+styleForPointId : Model -> PointId -> Color
+styleForPointId model id =
     let
-        highlightIndex cursor =
-            case cursor of
+        hoverDragId =
+            case model.cursor of
                 Bored ->
                     Nothing
 
-                Hovering index ->
-                    Just index
+                Hovering id ->
+                    Just id
 
-                Dragging index ->
-                    Just index
+                Dragging id ->
+                    Just id
     in
-        case highlightIndex cursor of
-            Just highlightPointIndex ->
-                if highlightPointIndex == index then
-                    highlightedColor
+        case hoverDragId of
+            -- Hovering or dragging takes highlight precedence
+            Just hoverDragPointId ->
+                if hoverDragPointId == id then
+                    hoverDragColor
                 else
                     normalColor
 
@@ -93,29 +100,43 @@ styleForIndex cursor index =
 viewPoints : Model -> List Form
 viewPoints model =
     let
-        viewPoint index point =
+        points =
+            Dict.toList model.points
+
+        viewPoint ( id, point ) =
             circle pointRadius
-                |> Collage.filled (styleForIndex model.cursor index)
+                |> Collage.filled (styleForPointId model id)
                 |> move (toTuple point)
+
+        viewSelection : ( PointId, Point ) -> Maybe Form
+        viewSelection ( id, point ) =
+            case Dict.get id model.selectedPoints of
+                Just _ ->
+                    rect (2 * pointRadius + 4) (2 * pointRadius + 4)
+                        |> outlined defaultLine
+                        |> move (toTuple point)
+                        |> Just
+
+                Nothing ->
+                    Nothing
     in
-        List.indexedMap viewPoint model.points
+        List.map viewPoint points
+            ++ List.filterMap viewSelection points
 
 
 viewEdges : Model -> List Form
 viewEdges model =
     let
-        pointArray =
-            Array.fromList model.points
-
-        pointAt index =
-            Array.get index pointArray
+        pointById id =
+            Dict.get id model.points
                 |> Maybe.withDefault fallbackPoint
                 |> toTuple
 
         viewEdge { from, to } =
-            segment (pointAt from) (pointAt to) |> traced { defaultLine | width = 2 }
+            segment (pointById from) (pointById to)
+                |> traced { defaultLine | width = 2 }
     in
-        List.map viewEdge model.edges
+        Dict.values model.edges |> List.map viewEdge
 
 
 viewIntersections : Model -> List Point -> List Form
@@ -167,7 +188,12 @@ viewHUD model intersections =
                             [ editButton ]
 
                     Edit ->
-                        [ playButton, levelCodeButton ]
+                        (if isEmpty model.selectedEdges && isEmpty model.selectedPoints then
+                            []
+                         else
+                            [ deleteButton ]
+                        )
+                            ++ [ playButton, levelCodeButton ]
                 )
     in
         div [ class "hud" ] [ status, actions ]
@@ -191,6 +217,11 @@ levelCodeButton =
 nextLevelButton : Html Msg
 nextLevelButton =
     button [ class "btn-3d red", onClick NextLevel ] [ text "Next level →" ]
+
+
+deleteButton : Html Msg
+deleteButton =
+    button [ class "small red btn-3d", onClick Delete ] [ iconLabel "💀" "Delete" ]
 
 
 playButton : Html Msg
@@ -219,43 +250,50 @@ levelToCode model =
         varName =
             "level" ++ (toString model.levelNumber)
 
-        showEdge : Edge -> String
-        showEdge { from, to } =
-            "Edge " ++ (toString from) ++ " " ++ (toString to)
+        showEdge : ( EdgeId, Edge ) -> String
+        showEdge ( id, { from, to } ) =
+            "( " ++ toString id ++ ", Edge " ++ (toString from) ++ " " ++ (toString to) ++ " )"
 
-        showPoint p =
+        showPoint : ( PointId, Point ) -> String
+        showPoint ( id, p ) =
             let
                 ( x, y ) =
                     toTuple p
             in
-                "vec2 " ++ (toString x) ++ " " ++ (toString y)
+                "( " ++ toString id ++ ", vec2 " ++ (toString x) ++ " " ++ (toString y) ++ " )"
 
         joinCodeLines a b =
             a
-                ++ "\n        "
-                ++ (if String.length b > 0 then
-                        ", "
-                    else
+                ++ "\n            "
+                ++ (if String.isEmpty b then
                         ""
+                    else
+                        ", "
                    )
                 ++ b
 
         points =
-            List.map showPoint model.points
+            Dict.toList model.points
+                |> List.map showPoint
                 |> List.foldl joinCodeLines ""
 
         edges =
-            List.map showEdge model.edges
+            Dict.toList model.edges
+                |> List.map showEdge
                 |> List.foldl joinCodeLines ""
     in
         varName
             ++ " : Level\n"
             ++ varName
-            ++ " ="
-            ++ "\n    { edges =\n"
-            ++ "        [ "
+            ++ " =\n"
+            ++ "    { edges =\n"
+            ++ "        Dict.fromList\n"
+            ++ "            [ "
             ++ edges
-            ++ "]\n    , points =\n"
-            ++ "        [ "
+            ++ "]\n"
+            ++ "    , points =\n"
+            ++ "        Dict.fromList\n"
+            ++ "            [ "
             ++ points
-            ++ "]\n    }\n"
+            ++ "]\n"
+            ++ "    }\n"

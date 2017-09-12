@@ -1,9 +1,22 @@
 module Types exposing (..)
 
 import Dict exposing (Dict)
+import Keyboard
 import Math.Vector2 exposing (Vec2)
 import Mouse
 import Window
+
+
+type alias Point =
+    Vec2
+
+
+type alias EdgeId =
+    String
+
+
+type alias PointId =
+    String
 
 
 type alias EdgeDict =
@@ -23,28 +36,17 @@ type alias Edge =
 type alias Model =
     { width : Int
     , height : Int
-    , edges : EdgeDict
-    , points : PointDict
+    , additiveSelection : Bool
     , cursor : Cursor
+    , edges : EdgeDict
     , levelCodeModalActive : Bool
     , levelNumber : Int
     , levelSolved : Bool
     , mode : Mode
+    , points : PointDict
     , selectedEdges : Dict EdgeId ()
     , selectedPoints : Dict PointId ()
     }
-
-
-type alias Point =
-    Vec2
-
-
-type alias EdgeId =
-    Int
-
-
-type alias PointId =
-    Int
 
 
 type Cursor
@@ -59,8 +61,11 @@ type Mode
 
 
 type Msg
-    = Delete
+    = CreateEdge PointId PointId
+    | Delete
     | EditMode
+    | KeyDown Keyboard.KeyCode
+    | KeyUp Keyboard.KeyCode
     | MouseDown Mouse.Position
     | MouseMove Mouse.Position
     | MouseUp Mouse.Position

@@ -1,24 +1,19 @@
 module Edge exposing (..)
 
-import Array
 import Dict exposing (Dict)
 import Math.Vector2 exposing (Vec2, add, dot, fromTuple, getX, getY, scale, sub, toTuple, vec2)
 import Types
     exposing
         ( Edge
-        , EdgeId
+        , EdgeDict
         , Point
-        , PointId
+        , PointDict
         )
 
 
-allIntersections : Dict PointId Point -> Dict EdgeId Edge -> List Point
+allIntersections : PointDict -> EdgeDict -> List Point
 allIntersections allPoints allEdges =
     let
-        points : List Point
-        points =
-            Dict.values allPoints
-
         intersections : List Edge -> List Point
         intersections remainingEdges =
             case remainingEdges of
@@ -29,7 +24,7 @@ allIntersections allPoints allEdges =
                     []
 
                 edge :: rest ->
-                    List.filterMap (intersect points edge) rest
+                    List.filterMap (intersect allPoints edge) rest
                         ++ intersections rest
     in
         intersections (Dict.values allEdges)
@@ -47,14 +42,11 @@ fallbackPoint =
     vec2 0 0
 
 
-intersect : List Point -> Edge -> Edge -> Maybe Point
+intersect : PointDict -> Edge -> Edge -> Maybe Point
 intersect points r s =
     let
-        pointArray =
-            Array.fromList points
-
-        pointAt index =
-            Array.get index pointArray
+        pointAt id =
+            Dict.get id points
                 |> Maybe.withDefault fallbackPoint
     in
         if r.from == s.from || r.from == s.to || r.to == s.from || r.to == s.to then

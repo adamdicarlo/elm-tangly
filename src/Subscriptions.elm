@@ -1,16 +1,24 @@
 module Subscriptions exposing (subscriptions)
 
+import Keyboard
 import Mouse
 import Window
-import Types exposing (Model, Msg(..))
+import Types exposing (Model, Mode(Edit), Msg(..))
 
 
 {-| width and height of HUD must correspond to CSS
 -}
+hudWidth : Int
 hudWidth =
     640
 
 
+hudEditModeWidth : Int
+hudEditModeWidth =
+    900
+
+
+hudHeight : Int
 hudHeight =
     90
 
@@ -22,13 +30,22 @@ subscriptions model =
         -- the HUD)
         mouseEvent : (Mouse.Position -> Msg) -> Mouse.Position -> Msg
         mouseEvent message { x, y } =
-            if y >= (model.height - hudHeight) && x <= hudWidth then
-                NoOp
-            else
-                message { x = x, y = y }
+            let
+                width =
+                    if model.mode == Edit then
+                        hudEditModeWidth
+                    else
+                        hudWidth
+            in
+                if y >= (model.height - hudHeight) && x <= width then
+                    NoOp
+                else
+                    message { x = x, y = y }
     in
         Sub.batch
-            [ Mouse.downs <| mouseEvent MouseDown
+            [ Keyboard.downs KeyDown
+            , Keyboard.ups KeyUp
+            , Mouse.downs <| mouseEvent MouseDown
             , Mouse.moves <| mouseEvent MouseMove
             , Mouse.ups <| mouseEvent MouseUp
             , Window.resizes WindowSize

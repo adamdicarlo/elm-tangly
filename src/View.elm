@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Color exposing (Color)
 import Dict exposing (Dict, isEmpty)
-import Collage exposing (Form, collage, circle, defaultLine, move, outlined, rect, segment, traced)
+import Collage exposing (Form, LineStyle, collage, circle, defaultLine, move, outlined, rect, segment, traced)
 import Element exposing (toHtml)
 import Html exposing (Html, button, code, div, pre, span, text)
 import Html.Attributes exposing (class)
@@ -17,7 +17,7 @@ import Types
         , EdgeId
         , Mode(Edit, Play)
         , Model
-        , Msg(Delete, EditMode, NextLevel, PlayMode, ToggleLevelCodeModal)
+        , Msg(CreateEdge, Delete, EditMode, NextLevel, PlayMode, ToggleLevelCodeModal)
         , Point
         , PointId
         )
@@ -71,6 +71,11 @@ selectedColor =
     Color.red
 
 
+selectionLineStyle : LineStyle
+selectionLineStyle =
+    { defaultLine | color = Color.green, width = 2 }
+
+
 styleForPointId : Model -> PointId -> Color
 styleForPointId model id =
     let
@@ -113,7 +118,7 @@ viewPoints model =
             case Dict.get id model.selectedPoints of
                 Just _ ->
                     rect (2 * pointRadius + 4) (2 * pointRadius + 4)
-                        |> outlined defaultLine
+                        |> outlined selectionLineStyle
                         |> move (toTuple point)
                         |> Just
 
@@ -176,27 +181,35 @@ viewHUD model intersections =
         status =
             div [ class "statusContainer" ] [ level, progress ]
 
-        actions =
-            div [ class "action" ]
-                (case model.mode of
-                    Play ->
-                        if model.levelSolved then
-                            [ iconLabel "🎊" "Solved!"
-                            , nextLevelButton
-                            ]
-                        else
-                            [ editButton ]
-
-                    Edit ->
-                        (if isEmpty model.selectedEdges && isEmpty model.selectedPoints then
-                            []
-                         else
-                            [ deleteButton ]
-                        )
-                            ++ [ playButton, levelCodeButton ]
-                )
+        className =
+            if model.mode == Edit then
+                "hud editMode"
+            else
+                "hud"
     in
-        div [ class "hud" ] [ status, actions ]
+        div [ class className ] [ status, viewHUDActions model ]
+
+
+viewHUDActions : Model -> Html Msg
+viewHUDActions model =
+    div [ class "action" ]
+        (case model.mode of
+            Play ->
+                if model.levelSolved then
+                    [ iconLabel "🎊" "Solved!"
+                    , nextLevelButton
+                    ]
+                else
+                    [ editButton ]
+
+            Edit ->
+                (if isEmpty model.selectedEdges && isEmpty model.selectedPoints then
+                    []
+                 else
+                    [ deleteButton, createEdgeButton model ]
+                )
+                    ++ [ levelCodeButton, playButton ]
+        )
 
 
 iconLabel : String -> String -> Html Msg
@@ -204,9 +217,20 @@ iconLabel icon label =
     span [] [ span [ class "icon" ] [ text icon ], span [] [ text label ] ]
 
 
+createEdgeButton : Model -> Html Msg
+createEdgeButton model =
+    case Dict.keys model.selectedPoints of
+        -- Exactly two vertices should be selected
+        from :: to :: [] ->
+            button [ class "small green btn-3d", onClick <| CreateEdge from to ] [ iconLabel "🌟" "Create Edge" ]
+
+        _ ->
+            span [] []
+
+
 editButton : Html Msg
 editButton =
-    button [ class "small red btn-3d", onClick EditMode ] [ iconLabel "🔧" "Edit" ]
+    button [ class "small blue btn-3d", onClick EditMode ] [ iconLabel "🔧" "Edit" ]
 
 
 levelCodeButton : Html Msg
@@ -226,7 +250,7 @@ deleteButton =
 
 playButton : Html Msg
 playButton =
-    button [ class "small red btn-3d", onClick PlayMode ] [ iconLabel "🎮" "Play" ]
+    button [ class "small blue btn-3d", onClick PlayMode ] [ iconLabel "🎮" "Play" ]
 
 
 viewLevelCodeModal : Model -> Html Msg
@@ -252,7 +276,7 @@ levelToCode model =
 
         showEdge : ( EdgeId, Edge ) -> String
         showEdge ( id, { from, to } ) =
-            "( " ++ toString id ++ ", Edge " ++ (toString from) ++ " " ++ (toString to) ++ " )"
+            "( \"" ++ id ++ "\", Edge \"" ++ from ++ "\" \"" ++ to ++ "\" )"
 
         showPoint : ( PointId, Point ) -> String
         showPoint ( id, p ) =
@@ -260,7 +284,7 @@ levelToCode model =
                 ( x, y ) =
                     toTuple p
             in
-                "( " ++ toString id ++ ", vec2 " ++ (toString x) ++ " " ++ (toString y) ++ " )"
+                "( \"" ++ id ++ "\", vec2 " ++ (toString x) ++ " " ++ (toString y) ++ " )"
 
         joinCodeLines a b =
             a

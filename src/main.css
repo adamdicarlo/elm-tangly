@@ -45,6 +45,10 @@ pre {
   user-select: none;
 }
 
+.hud.editMode {
+  width: 900px;
+}
+
 .levelCodeModalBackdrop {
   position: absolute;
   top: 0;

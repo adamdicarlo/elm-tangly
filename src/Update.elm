@@ -2,6 +2,7 @@ module Update exposing (init, update)
 
 import Dict exposing (Dict)
 import Task exposing (perform)
+import Keyboard.Key
 import Window
 import Constants exposing (edgesForLevel, pointsForLevel)
 import Edge exposing (allIntersections)
@@ -23,9 +24,9 @@ init : ( Model, Cmd Msg )
 init =
     ( { width = 0
       , height = 0
-      , points = pointsForLevel 1
-      , edges = edgesForLevel 1
+      , additiveSelection = False
       , cursor = Bored
+      , edges = edgesForLevel 1
       , levelCodeModalActive = False
       , levelNumber = 1
 
@@ -33,6 +34,7 @@ init =
       -- un-solve the puzzle) without having to re-solve to advance to the next level
       , levelSolved = False
       , mode = Edit --Play
+      , points = pointsForLevel 1
       , selectedEdges = Dict.empty
       , selectedPoints = Dict.empty
       }
@@ -43,6 +45,13 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        CreateEdge from to ->
+            let
+                id =
+                    toString from ++ "-" ++ toString to
+            in
+                { model | edges = Dict.insert id (Edge from to) model.edges } ! []
+
         Delete ->
             { model
                 | cursor = Bored
@@ -57,10 +66,32 @@ update msg model =
             }
                 ! []
 
+        KeyDown keyCode ->
+            case Keyboard.Key.fromCode keyCode of
+                Keyboard.Key.Shift _ ->
+                    { model | additiveSelection = True } ! []
+
+                _ ->
+                    model ! []
+
+        KeyUp keyCode ->
+            case Keyboard.Key.fromCode keyCode of
+                Keyboard.Key.Shift _ ->
+                    { model | additiveSelection = False } ! []
+
+                _ ->
+                    model ! []
+
         MouseDown { x, y } ->
             let
                 pointId =
                     findPointNear model.points (screenToPoint model x y)
+
+                baseSelection =
+                    if model.additiveSelection then
+                        model.selectedPoints
+                    else
+                        Dict.empty
             in
                 { model
                     | cursor =
@@ -70,10 +101,11 @@ update msg model =
                     , selectedPoints =
                         case pointId of
                             Just id ->
-                                Dict.singleton id ()
+                                baseSelection
+                                    |> Dict.update id (toggleMaybe ())
 
                             Nothing ->
-                                Dict.empty
+                                baseSelection
                 }
                     ! []
 
@@ -153,6 +185,16 @@ deleteEdgesWithPoints points edges =
 deletePoints : Dict PointId () -> Dict PointId Point -> Dict PointId Point
 deletePoints doomed points =
     points
+
+
+toggleMaybe : a -> Maybe a -> Maybe a
+toggleMaybe valueIfOn maybe =
+    case maybe of
+        Just _ ->
+            Nothing
+
+        Nothing ->
+            Just valueIfOn
 
 
 updateDragPoint : Model -> PointId -> Point -> Model

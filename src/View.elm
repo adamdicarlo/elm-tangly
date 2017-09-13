@@ -1,15 +1,16 @@
 module View exposing (view)
 
 import Color exposing (Color)
-import Dict exposing (Dict, isEmpty)
+import Dict exposing (Dict)
 import Collage exposing (Form, LineStyle, collage, circle, defaultLine, move, outlined, rect, segment, traced)
 import Element exposing (toHtml)
 import Html exposing (Html, button, code, div, pre, span, text)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Math.Vector2 exposing (toTuple, vec2)
 import Constants exposing (pointRadius)
 import Edge exposing (allIntersections)
+import Model exposing (isSelectionEmpty)
 import Types
     exposing
         ( Cursor(Bored, Dragging, Hovering)
@@ -48,8 +49,23 @@ view model =
                 ]
                 |> collage model.width model.height
                 |> toHtml
+
+        canvasStyles =
+            case model.cursor of
+                Bored ->
+                    if model.mode == Edit && isSelectionEmpty model then
+                        -- indicate that clicking will create a vertex
+                        [ ( "cursor", "cell" ) ]
+                    else
+                        []
+
+                Hovering _ ->
+                    [ ( "cursor", "pointer" ) ]
+
+                Dragging _ ->
+                    [ ( "cursor", "move" ) ]
     in
-        div [ class "tangly" ]
+        div [ class "tangly", style canvasStyles ]
             [ canvas
             , viewHUD model intersections
             , viewLevelCodeModal model
@@ -203,7 +219,7 @@ viewHUDActions model =
                     [ editButton ]
 
             Edit ->
-                (if isEmpty model.selectedEdges && isEmpty model.selectedPoints then
+                (if isSelectionEmpty model then
                     []
                  else
                     [ deleteButton, createEdgeButton model ]

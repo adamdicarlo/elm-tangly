@@ -37,6 +37,11 @@ findPointNear points test =
                     Nothing
 
 
+isSelectionEmpty : Model -> Bool
+isSelectionEmpty model =
+    Dict.isEmpty model.selectedEdges && Dict.isEmpty model.selectedPoints
+
+
 screenToPoint : Model -> Int -> Int -> Point
 screenToPoint model x y =
     let

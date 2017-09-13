@@ -3,19 +3,22 @@ module Update exposing (init, update)
 import Dict exposing (Dict)
 import Task exposing (perform)
 import Keyboard.Key
+import Math.Vector2 exposing (toTuple)
 import Window
 import Constants exposing (edgesForLevel, pointsForLevel)
 import Edge exposing (allIntersections)
-import Model exposing (findPointNear, screenToPoint)
+import Model exposing (findPointNear, isSelectionEmpty, screenToPoint)
 import Types
     exposing
         ( Cursor(..)
         , Edge
+        , EdgeDict
         , EdgeId
         , Mode(Edit, Play)
         , Model
         , Msg(..)
         , Point
+        , PointDict
         , PointId
         )
 
@@ -84,8 +87,11 @@ update msg model =
 
         MouseDown { x, y } ->
             let
-                pointId =
-                    findPointNear model.points (screenToPoint model x y)
+                location =
+                    screenToPoint model x y
+
+                maybePointId =
+                    findPointNear model.points location
 
                 baseSelection =
                     if model.additiveSelection then
@@ -93,21 +99,20 @@ update msg model =
                     else
                         Dict.empty
             in
-                { model
-                    | cursor =
-                        pointId
-                            |> Maybe.map Dragging
-                            |> Maybe.withDefault Bored
-                    , selectedPoints =
-                        case pointId of
-                            Just id ->
-                                baseSelection
-                                    |> Dict.update id (toggleMaybe ())
+                case maybePointId of
+                    Just pointId ->
+                        { model
+                            | cursor = Dragging pointId
+                            , selectedPoints =
+                                Dict.update pointId (toggleMaybe ()) baseSelection
+                        }
+                            ! []
 
-                            Nothing ->
-                                baseSelection
-                }
-                    ! []
+                    Nothing ->
+                        if model.mode == Edit && isSelectionEmpty model then
+                            { model | cursor = Bored, points = insertPoint model.points location } ! []
+                        else
+                            { model | cursor = Bored, selectedPoints = Dict.empty, selectedEdges = Dict.empty } ! []
 
         MouseMove { x, y } ->
             let
@@ -172,17 +177,30 @@ update msg model =
             { model | width = width, height = height } ! []
 
 
-deleteEdges : Dict EdgeId () -> Dict EdgeId Edge -> Dict EdgeId Edge
+insertPoint : PointDict -> Point -> PointDict
+insertPoint points newPoint =
+    let
+        ( x, y ) =
+            toTuple newPoint
+
+        -- TODO: Use random string value here
+        id =
+            "p" ++ (toString x) ++ "," ++ (toString y)
+    in
+        Dict.insert id newPoint points
+
+
+deleteEdges : Dict EdgeId () -> EdgeDict -> EdgeDict
 deleteEdges doomed edges =
     edges
 
 
-deleteEdgesWithPoints : Dict PointId () -> Dict EdgeId Edge -> Dict EdgeId Edge
+deleteEdgesWithPoints : Dict PointId () -> EdgeDict -> EdgeDict
 deleteEdgesWithPoints points edges =
     edges
 
 
-deletePoints : Dict PointId () -> Dict PointId Point -> Dict PointId Point
+deletePoints : Dict PointId () -> PointDict -> PointDict
 deletePoints doomed points =
     points
 

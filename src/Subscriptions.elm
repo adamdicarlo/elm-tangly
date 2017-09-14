@@ -26,10 +26,8 @@ hudHeight =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
-        -- We only want to receive mouse events that happen within the playfield (not within
-        -- the HUD)
         mouseEvent : (Mouse.Position -> Msg) -> Mouse.Position -> Msg
-        mouseEvent message { x, y } =
+        mouseEvent message ({ x, y } as payload) =
             let
                 width =
                     if model.mode == Edit then
@@ -37,16 +35,25 @@ subscriptions model =
                     else
                         hudWidth
             in
-                if y >= (model.height - hudHeight) && x <= width then
+                -- We only want to receive mouse events:
+                -- * that happen within the playfield (not within the HUD)
+                -- * when the modal isn't active (check this here _just in case_ a delayed message
+                --   comes through... shouldn't happen, but, you never know.
+                if model.levelCodeModalActive || y >= (model.height - hudHeight) && x <= width then
                     NoOp
                 else
-                    message { x = x, y = y }
+                    message payload
+
+        normalModeEvents =
+            -- Prevent game input messages when modal is open
+            if model.levelCodeModalActive then
+                []
+            else
+                [ Keyboard.downs KeyDown
+                , Keyboard.ups KeyUp
+                , Mouse.downs <| mouseEvent MouseDown
+                , Mouse.moves <| mouseEvent MouseMove
+                , Mouse.ups <| mouseEvent MouseUp
+                ]
     in
-        Sub.batch
-            [ Keyboard.downs KeyDown
-            , Keyboard.ups KeyUp
-            , Mouse.downs <| mouseEvent MouseDown
-            , Mouse.moves <| mouseEvent MouseMove
-            , Mouse.ups <| mouseEvent MouseUp
-            , Window.resizes WindowSize
-            ]
+        Sub.batch <| Window.resizes WindowSize :: normalModeEvents

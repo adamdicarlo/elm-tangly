@@ -272,7 +272,7 @@ playButton =
 viewLevelCodeModal : Model -> Html Msg
 viewLevelCodeModal model =
     if model.levelCodeModalActive then
-        div [ class "levelCodeModalBackdrop" ]
+        div [ class "levelCodeModalBackdrop open" ]
             [ div [ class "levelCodeModal" ]
                 [ pre []
                     [ text <| levelToCode model
@@ -281,7 +281,7 @@ viewLevelCodeModal model =
                 ]
             ]
     else
-        div [] []
+        div [ class "levelCodeModalBackdrop" ] []
 
 
 levelToCode : Model -> String

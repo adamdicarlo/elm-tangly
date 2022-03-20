@@ -1,10 +1,10 @@
 module Types exposing (..)
 
+import Browser.Dom exposing (Viewport)
 import Dict exposing (Dict)
-import Keyboard
+import GraphicSVG.Widget
+import Keyboard.Key exposing (Key)
 import Math.Vector2 exposing (Vec2)
-import Mouse
-import Window
 
 
 type alias Point =
@@ -24,7 +24,7 @@ type alias EdgeDict =
 
 
 type alias PointDict =
-    Dict PointId Point
+    Dict PointId Vec2
 
 
 type alias Edge =
@@ -34,8 +34,8 @@ type alias Edge =
 
 
 type alias Model =
-    { width : Int
-    , height : Int
+    { height : Float
+    , width : Float
     , additiveSelection : Bool
     , cursor : Cursor
     , edges : EdgeDict
@@ -64,13 +64,13 @@ type Msg
     = CreateEdge PointId PointId
     | Delete
     | EditMode
-    | KeyDown Keyboard.KeyCode
-    | KeyUp Keyboard.KeyCode
-    | MouseDown Mouse.Position
-    | MouseMove Mouse.Position
-    | MouseUp Mouse.Position
+    | KeyDown Key
+    | KeyUp Key
+    | MouseDown Vec2
+    | MouseMove Vec2
+    | MouseUp Vec2
     | NextLevel
     | NoOp
     | PlayMode
     | ToggleLevelCodeModal
-    | WindowSize Window.Size
+    | WindowSize Vec2

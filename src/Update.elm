@@ -1,20 +1,21 @@
 module Update exposing (init, update)
 
-import Dict exposing (Dict)
-import Task exposing (perform)
-import Keyboard.Key
-import Math.Vector2 exposing (toTuple)
-import Window
+import Browser.Dom exposing (Viewport, getViewport)
 import Constants exposing (edgesForLevel, pointsForLevel)
+import Debug exposing (toString)
+import Dict exposing (Dict)
 import Edge exposing (allIntersections)
+import Keyboard.Key
+import Math.Vector2 exposing (Vec2, getX, getY, toRecord, vec2)
 import Model exposing (findPointNear, isSelectionEmpty, screenToPoint)
+import Task exposing (Task)
 import Types
     exposing
         ( Cursor(..)
         , Edge
         , EdgeDict
         , EdgeId
-        , Mode(Edit, Play)
+        , Mode(..)
         , Model
         , Msg(..)
         , Point
@@ -41,8 +42,18 @@ init =
       , selectedEdges = Dict.empty
       , selectedPoints = Dict.empty
       }
-    , perform WindowSize Window.size
+    , Task.perform WindowSize getWindowSize
     )
+
+
+getWindowSize : Task x Vec2
+getWindowSize =
+    let
+        viewportToSize : Viewport -> Vec2
+        viewportToSize { viewport } =
+            vec2 viewport.width viewport.height
+    in
+    Task.map viewportToSize getViewport
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -53,10 +64,12 @@ update msg model =
                 id =
                     toString from ++ "-" ++ toString to
             in
-                { model | edges = Dict.insert id (Edge from to) model.edges } ! []
+            ( { model | edges = Dict.insert id (Edge from to) model.edges }
+            , Cmd.none
+            )
 
         Delete ->
-            { model
+            ( { model
                 | cursor = Bored
                 , edges =
                     -- first delete the edges that were selected
@@ -66,29 +79,38 @@ update msg model =
                 , points = deletePoints model.selectedPoints model.points
                 , selectedEdges = Dict.empty
                 , selectedPoints = Dict.empty
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         KeyDown keyCode ->
-            case Keyboard.Key.fromCode keyCode of
+            case keyCode of
                 Keyboard.Key.Shift _ ->
-                    { model | additiveSelection = True } ! []
+                    ( { model | additiveSelection = True }
+                    , Cmd.none
+                    )
 
                 _ ->
-                    model ! []
+                    ( model
+                    , Cmd.none
+                    )
 
         KeyUp keyCode ->
-            case Keyboard.Key.fromCode keyCode of
+            case keyCode of
                 Keyboard.Key.Shift _ ->
-                    { model | additiveSelection = False } ! []
+                    ( { model | additiveSelection = False }
+                    , Cmd.none
+                    )
 
                 _ ->
-                    model ! []
+                    ( model
+                    , Cmd.none
+                    )
 
-        MouseDown { x, y } ->
+        MouseDown pos ->
             let
                 location =
-                    screenToPoint model x y
+                    screenToPoint model (getX pos) (getY pos)
 
                 maybePointId =
                     findPointNear model.points location
@@ -96,44 +118,58 @@ update msg model =
                 baseSelection =
                     if model.additiveSelection then
                         model.selectedPoints
+
                     else
                         Dict.empty
             in
-                case maybePointId of
-                    Just pointId ->
-                        { model
-                            | cursor = Dragging pointId
-                            , selectedPoints =
-                                Dict.update pointId (toggleMaybe ()) baseSelection
-                        }
-                            ! []
+            case maybePointId of
+                Just pointId ->
+                    ( { model
+                        | cursor = Dragging pointId
+                        , selectedPoints =
+                            Dict.update pointId (toggleMaybe ()) baseSelection
+                      }
+                    , Cmd.none
+                    )
 
-                    Nothing ->
-                        if model.mode == Edit && isSelectionEmpty model then
-                            { model | cursor = Bored, points = insertPoint model.points location } ! []
-                        else
-                            { model | cursor = Bored, selectedPoints = Dict.empty, selectedEdges = Dict.empty } ! []
+                Nothing ->
+                    if model.mode == Edit && isSelectionEmpty model then
+                        ( { model | cursor = Bored, points = insertPoint model.points location }
+                        , Cmd.none
+                        )
 
-        MouseMove { x, y } ->
+                    else
+                        ( { model | cursor = Bored, selectedPoints = Dict.empty, selectedEdges = Dict.empty }
+                        , Cmd.none
+                        )
+
+        MouseMove pos ->
             let
+                { x, y } =
+                    toRecord pos
+
                 mousePoint =
                     screenToPoint model x y
             in
-                case model.cursor of
-                    Dragging id ->
-                        (updateDragPoint model id mousePoint) ! []
+            case model.cursor of
+                Dragging id ->
+                    ( updateDragPoint model id mousePoint
+                    , Cmd.none
+                    )
 
-                    _ ->
-                        let
-                            cursor =
-                                findPointNear model.points mousePoint
-                                    |> Maybe.map Hovering
-                                    |> Maybe.withDefault Bored
-                        in
-                            { model | cursor = cursor } ! []
+                _ ->
+                    let
+                        cursor =
+                            findPointNear model.points mousePoint
+                                |> Maybe.map Hovering
+                                |> Maybe.withDefault Bored
+                    in
+                    ( { model | cursor = cursor }
+                    , Cmd.none
+                    )
 
-        MouseUp { x, y } ->
-            { model
+        MouseUp _ ->
+            ( { model
                 | cursor =
                     case model.cursor of
                         Dragging id ->
@@ -145,49 +181,60 @@ update msg model =
                     model.levelSolved
                         || List.length (allIntersections model.points model.edges)
                         == 0
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         NextLevel ->
-            { model
+            ( { model
                 | points = pointsForLevel (model.levelNumber + 1)
                 , edges = edgesForLevel (model.levelNumber + 1)
                 , levelNumber = model.levelNumber + 1
                 , levelSolved = False
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         NoOp ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
         EditMode ->
-            { model | mode = Edit } ! []
+            ( { model | mode = Edit }
+            , Cmd.none
+            )
 
         PlayMode ->
-            { model | mode = Play } ! []
+            ( { model | mode = Play }
+            , Cmd.none
+            )
 
         ToggleLevelCodeModal ->
-            { model
+            ( { model
                 | cursor = Bored
                 , levelCodeModalActive = not model.levelCodeModalActive
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
-        WindowSize { width, height } ->
-            { model | width = width, height = height } ! []
+        WindowSize size ->
+            ( { model | width = getX size, height = getY size }
+            , Cmd.none
+            )
 
 
 insertPoint : PointDict -> Point -> PointDict
 insertPoint points newPoint =
     let
-        ( x, y ) =
-            toTuple newPoint
+        { x, y } =
+            toRecord newPoint
 
         -- TODO: Use random string value here
         id =
-            "p" ++ (toString x) ++ "," ++ (toString y)
+            "p" ++ toString x ++ "," ++ toString y
     in
-        Dict.insert id newPoint points
+    Dict.insert id newPoint points
 
 
 deleteEdges : Dict EdgeId () -> EdgeDict -> EdgeDict
@@ -221,7 +268,7 @@ updateDragPoint model id newValue =
         updater =
             Maybe.map (\_ -> newValue)
     in
-        { model
-            | points =
-                Dict.update id updater model.points
-        }
+    { model
+        | points =
+            Dict.update id updater model.points
+    }

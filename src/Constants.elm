@@ -1,4 +1,4 @@
-module Constants exposing (edgesForLevel, pointsForLevel, pointRadius)
+module Constants exposing (edgesForLevel, pointRadius, pointsForLevel)
 
 import Array exposing (Array)
 import Dict exposing (Dict)

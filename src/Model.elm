@@ -1,14 +1,14 @@
 module Model exposing (..)
 
+import Constants exposing (pointRadius)
 import Dict exposing (Dict)
 import List.Extra
-import Math.Vector2 exposing (distance, fromTuple)
-import Constants exposing (pointRadius)
+import Math.Vector2 exposing (distance, vec2)
 import Types
     exposing
         ( Model
-        , PointId
         , Point
+        , PointId
         )
 
 
@@ -26,15 +26,16 @@ findPointNear points test =
                 |> List.map distanceWithId
                 |> List.Extra.minimumBy Tuple.second
     in
-        case closest of
-            Nothing ->
-                Nothing |> Debug.log "Bug! findPointNear received empty list?"
+    case closest of
+        Nothing ->
+            Nothing |> Debug.log "Bug! findPointNear received empty list?"
 
-            Just ( closestId, closestDistance ) ->
-                if closestDistance < pointRadius then
-                    Just closestId
-                else
-                    Nothing
+        Just ( closestId, closestDistance ) ->
+            if closestDistance < pointRadius then
+                Just closestId
+
+            else
+                Nothing
 
 
 isSelectionEmpty : Model -> Bool
@@ -42,13 +43,13 @@ isSelectionEmpty model =
     Dict.isEmpty model.selectedEdges && Dict.isEmpty model.selectedPoints
 
 
-screenToPoint : Model -> Int -> Int -> Point
+screenToPoint : Model -> Float -> Float -> Point
 screenToPoint model x y =
     let
         xOrigin =
-            (toFloat model.width) / 2.0
+            model.width / 2.0
 
         yOrigin =
-            (toFloat model.height) / 2.0
+            model.height / 2.0
     in
-        fromTuple ( (toFloat x) - xOrigin, yOrigin - (toFloat y) )
+    vec2 (x - xOrigin) (yOrigin - y)

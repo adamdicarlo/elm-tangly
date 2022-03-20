@@ -1,11 +1,10 @@
 module Tests exposing (..)
 
 import Dict
-import String
+import Edge exposing (intersect, nearlyEqual)
 import Expect
-import Math.Vector2 exposing (fromTuple, vec2)
-import Test exposing (Test, describe, test, todo, skip, only)
-import Edge exposing (allIntersections, intersect, nearlyEqual)
+import Math.Vector2 exposing (vec2)
+import Test exposing (Test, describe, only, skip, test, todo)
 import Types exposing (Edge)
 
 
@@ -19,7 +18,7 @@ intersectVerticalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 -5 5 ), ( "1", vec2 -5 0 ), ( "2", vec2 -5 8 ), ( "3", vec2 -5 4 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 -5 4.5)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 -5 4.5)
         , test "that intersect, second below first" <|
             \_ ->
                 let
@@ -27,7 +26,7 @@ intersectVerticalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 -5 8 ), ( "1", vec2 -5 4 ), ( "2", vec2 -5 5 ), ( "3", vec2 -5 0 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 -5 4.5)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 -5 4.5)
         , test "that do NOT intersect, first below second" <|
             \_ ->
                 let
@@ -35,7 +34,7 @@ intersectVerticalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 -5 5 ), ( "1", vec2 -5 0 ), ( "2", vec2 -5 8 ), ( "3", vec2 -5 6 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         , test "that do NOT intersect, second below first" <|
             \_ ->
                 let
@@ -43,7 +42,7 @@ intersectVerticalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 -5 8 ), ( "1", vec2 -5 6 ), ( "2", vec2 -5 5 ), ( "3", vec2 -5 0 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         ]
 
 
@@ -57,7 +56,7 @@ intersectParallelSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 5 0 ), ( "1", vec2 5 10 ), ( "2", vec2 0 0 ), ( "3", vec2 0 10 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         , test "that are horizontal" <|
             \_ ->
                 let
@@ -65,7 +64,7 @@ intersectParallelSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 5 0 ), ( "2", vec2 0 -5 ), ( "3", vec2 6 -5 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         , test "that are slanted up-right" <|
             \_ ->
                 let
@@ -73,7 +72,7 @@ intersectParallelSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 7 7 ), ( "2", vec2 1 0 ), ( "3", vec2 8 7 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         , test "that are slanted down-right" <|
             \_ ->
                 let
@@ -81,7 +80,7 @@ intersectParallelSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 7 ), ( "1", vec2 7 0 ), ( "2", vec2 1 8 ), ( "3", vec2 8 1 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         ]
 
 
@@ -95,7 +94,7 @@ intersectSlantedCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 5 5 ), ( "3", vec2 15 15 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 7.5 7.5)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 7.5 7.5)
         , test "that do NOT intersect, second above-right of first" <|
             \_ ->
                 let
@@ -103,7 +102,7 @@ intersectSlantedCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 10.1 10.1 ), ( "3", vec2 15 15 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         , test "that do NOT intersect, first above-right of second" <|
             \_ ->
                 let
@@ -111,7 +110,7 @@ intersectSlantedCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 10.1 10.1 ), ( "1", vec2 15 15 ), ( "2", vec2 1 1 ), ( "3", vec2 10 10 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         ]
 
 
@@ -125,7 +124,7 @@ intersectSlantedSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 1 10 ), ( "3", vec2 10 1 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 5.5 5.5)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 5.5 5.5)
         , test "that intersect (2)" <|
             \_ ->
                 let
@@ -133,7 +132,7 @@ intersectSlantedSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 5 10 ), ( "2", vec2 0 5 ), ( "3", vec2 5 5 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 2.5 5)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 2.5 5)
         , test "that do NOT intersect" <|
             \_ ->
                 let
@@ -141,7 +140,7 @@ intersectSlantedSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 2 1 ), ( "3", vec2 11 10 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         , test "that do NOT intersect (2)" <|
             \_ ->
                 let
@@ -149,7 +148,7 @@ intersectSlantedSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 5 10 ), ( "2", vec2 0.1 0 ), ( "3", vec2 5.1 9.9 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         ]
 
 
@@ -163,15 +162,15 @@ intersectHorizontalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 -5 -5 ), ( "1", vec2 0 -5 ), ( "2", vec2 -2 -5 ), ( "3", vec2 3 -5 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 -1 -5)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 -1 -5)
         , test "that DO intersect, second left of first" <|
             \_ ->
                 let
                     points =
                         Dict.fromList
-                            [ ( "0", vec2 0 0 ), ( "1", vec2 5 0 ), ( "2", vec2 -2 0 ), ( "3", vec2 1 0 ) ]
+                            [ ( "0", vec2 0 0 ), ( "1", vec2 5 0 ), ( "2", vec2 -2 0 ), ( "3", vec2 2 0 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 0.5 0)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 1 0)
         , test "that DO intersect, first contained within second" <|
             \_ ->
                 let
@@ -179,7 +178,7 @@ intersectHorizontalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 1 0 ), ( "1", vec2 2 0 ), ( "2", vec2 0 0 ), ( "3", vec2 10 0 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 1.5 0)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 1.5 0)
         , test "that DO intersect, second contained within first" <|
             \_ ->
                 let
@@ -187,7 +186,7 @@ intersectHorizontalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 10 0 ), ( "2", vec2 1 0 ), ( "3", vec2 2 0 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 1.5 0)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 1.5 0)
         , test "that DO NOT intersect, first left of second" <|
             \_ ->
                 let
@@ -195,7 +194,7 @@ intersectHorizontalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 -5 -5 ), ( "1", vec2 0 -5 ), ( "2", vec2 2 -5 ), ( "3", vec2 5 -5 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         , test "that DO NOT intersect, first right of second" <|
             \_ ->
                 let
@@ -203,7 +202,7 @@ intersectHorizontalCollinearSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 2 -5 ), ( "1", vec2 5 -5 ), ( "2", vec2 -5 -5 ), ( "3", vec2 0 -5 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Nothing
         ]
 
 
@@ -223,7 +222,7 @@ intersectHorizontalSegmentsTests =
                     edge2 =
                         Edge "2" "3"
                 in
-                    Expect.equal (intersect points edge1 edge2) (Nothing)
+                Expect.equal (intersect points edge1 edge2) Nothing
         , test "that DO intersect, second after first" <|
             \_ ->
                 let
@@ -237,7 +236,7 @@ intersectHorizontalSegmentsTests =
                     edge2 =
                         Edge "2" "3"
                 in
-                    Expect.equal (intersect points edge1 edge2) <| Just (vec2 19.5 1)
+                Expect.equal (intersect points edge1 edge2) <| Just (vec2 19.5 1)
         , test "that DO intersect, first after second" <|
             \_ ->
                 let
@@ -251,7 +250,7 @@ intersectHorizontalSegmentsTests =
                     edge2 =
                         Edge "2" "3"
                 in
-                    Expect.equal (intersect points edge1 edge2) <| Just (vec2 11 1)
+                Expect.equal (intersect points edge1 edge2) <| Just (vec2 11 1)
         , test "that DO intersect, second contained within first" <|
             \_ ->
                 let
@@ -265,7 +264,7 @@ intersectHorizontalSegmentsTests =
                     edge2 =
                         Edge "2" "3"
                 in
-                    Expect.equal (intersect points edge1 edge2) <| Just (vec2 5 0)
+                Expect.equal (intersect points edge1 edge2) <| Just (vec2 5 0)
         , test "that DO intersect, first contained within second" <|
             \_ ->
                 let
@@ -279,7 +278,7 @@ intersectHorizontalSegmentsTests =
                     edge2 =
                         Edge "2" "3"
                 in
-                    Expect.equal (intersect points edge1 edge2) <| Just (vec2 1.5 0)
+                Expect.equal (intersect points edge1 edge2) <| Just (vec2 1.5 0)
         ]
 
 
@@ -299,7 +298,7 @@ intersectVerticalSegmentsTests =
                     edge2 =
                         Edge "2" "3"
                 in
-                    Expect.equal (intersect points edge1 edge2) (Nothing)
+                Expect.equal (intersect points edge1 edge2) Nothing
         , test "that DO NOT intersect, first ABOVE second" <|
             \_ ->
                 let
@@ -313,7 +312,7 @@ intersectVerticalSegmentsTests =
                     edge2 =
                         Edge "2" "3"
                 in
-                    Expect.equal (intersect points edge1 edge2) (Nothing)
+                Expect.equal (intersect points edge1 edge2) Nothing
         , test "that DO intersect, second ABOVE first" <|
             \_ ->
                 let
@@ -321,7 +320,7 @@ intersectVerticalSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 -5 ), ( "1", vec2 0 3 ), ( "2", vec2 0 1 ), ( "3", vec2 0 5 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 0 2)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 0 2)
         , test "that DO intersect, first ABOVE second" <|
             \_ ->
                 let
@@ -329,7 +328,7 @@ intersectVerticalSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 0 -5 ), ( "1", vec2 0 3 ), ( "2", vec2 0 -8 ), ( "3", vec2 0 -3 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 0 -4)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 0 -4)
         , test "that DO intersect, second contained within first" <|
             \_ ->
                 let
@@ -337,7 +336,7 @@ intersectVerticalSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 7 0 ), ( "1", vec2 7 10 ), ( "2", vec2 7 8 ), ( "3", vec2 7 4 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 7 6)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 7 6)
         , test "that DO intersect, first contained within second" <|
             \_ ->
                 let
@@ -345,7 +344,7 @@ intersectVerticalSegmentsTests =
                         Dict.fromList
                             [ ( "0", vec2 7 8 ), ( "1", vec2 7 4 ), ( "2", vec2 7 0 ), ( "3", vec2 7 10 ) ]
                 in
-                    Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 7 6)
+                Expect.equal (intersect points (Edge "0" "1") (Edge "2" "3")) <| Just (vec2 7 6)
         ]
 
 

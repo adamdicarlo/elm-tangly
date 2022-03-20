@@ -1,18 +1,17 @@
 module App exposing (..)
 
-import Html exposing (Html)
-import Edge exposing (allIntersections)
+import Browser
 import Subscriptions exposing (subscriptions)
-import Update exposing (init, update)
 import Types exposing (Model, Msg)
+import Update exposing (init, update)
 import View exposing (view)
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.element
         { view = view
-        , init = init
+        , init = \_ -> init
         , update = update
         , subscriptions = subscriptions
         }

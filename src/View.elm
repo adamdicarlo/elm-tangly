@@ -1,27 +1,43 @@
 module View exposing (view)
 
-import Color exposing (Color)
-import Dict exposing (Dict)
-import Collage exposing (Form, LineStyle, collage, circle, defaultLine, move, outlined, rect, segment, traced)
-import Element exposing (toHtml)
-import Html exposing (Html, button, code, div, pre, span, text)
+import Constants exposing (pointRadius)
+import Debug exposing (toString)
+import Dict
+import Edge exposing (allIntersections)
+import GraphicSVG
+    exposing
+        ( Color
+        , LineType
+        , Shape
+        , circle
+        , line
+        , move
+        , outlined
+        , rect
+        , solid
+        )
+import GraphicSVG.Widget
+import Html exposing (Html, button, div, pre, span, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
-import Math.Vector2 exposing (toTuple, vec2)
-import Constants exposing (pointRadius)
-import Edge exposing (allIntersections)
+import Math.Vector2 exposing (vec2)
 import Model exposing (isSelectionEmpty)
 import Types
     exposing
-        ( Cursor(Bored, Dragging, Hovering)
+        ( Cursor(..)
         , Edge
         , EdgeId
-        , Mode(Edit, Play)
+        , Mode(..)
         , Model
-        , Msg(CreateEdge, Delete, EditMode, NextLevel, PlayMode, ToggleLevelCodeModal)
+        , Msg(..)
         , Point
         , PointId
         )
+
+
+toTuple : Point -> ( Float, Float )
+toTuple p =
+    ( Math.Vector2.getX p, Math.Vector2.getY p )
 
 
 fallbackPoint : Point
@@ -30,16 +46,10 @@ fallbackPoint =
 
 
 view : Model -> Html Msg
-view model =
+view ({ edges, points, width, height } as model) =
     let
-        width =
-            toFloat model.width
-
-        height =
-            toFloat model.height
-
         intersections =
-            allIntersections model.points model.edges
+            allIntersections points edges
 
         canvas =
             List.concat
@@ -47,49 +57,49 @@ view model =
                 , viewPoints model
                 , viewIntersections model intersections
                 ]
-                |> collage model.width model.height
-                |> toHtml
+                |> GraphicSVG.Widget.icon "gfx" width height
 
-        canvasStyles =
+        canvasStyleAttrs =
             case model.cursor of
                 Bored ->
                     if model.mode == Edit && isSelectionEmpty model then
                         -- indicate that clicking will create a vertex
-                        [ ( "cursor", "cell" ) ]
+                        [ style "cursor" "cell" ]
+
                     else
                         []
 
                 Hovering _ ->
-                    [ ( "cursor", "pointer" ) ]
+                    [ style "cursor" "pointer" ]
 
                 Dragging _ ->
-                    [ ( "cursor", "move" ) ]
+                    [ style "cursor" "move" ]
     in
-        div [ class "tangly", style canvasStyles ]
-            [ canvas
-            , viewHUD model intersections
-            , viewLevelCodeModal model
-            ]
+    div (class "tangly" :: canvasStyleAttrs)
+        [ canvas
+        , viewHUD model intersections
+        , viewLevelCodeModal model
+        ]
 
 
 hoverDragColor : Color
 hoverDragColor =
-    Color.green
+    GraphicSVG.green
 
 
 normalColor : Color
 normalColor =
-    Color.black
+    GraphicSVG.black
 
 
 selectedColor : Color
 selectedColor =
-    Color.red
+    GraphicSVG.red
 
 
-selectionLineStyle : LineStyle
-selectionLineStyle =
-    { defaultLine | color = Color.green, width = 2 }
+selectionLineType : LineType
+selectionLineType =
+    solid 2
 
 
 styleForPointId : Model -> PointId -> Color
@@ -100,25 +110,26 @@ styleForPointId model id =
                 Bored ->
                     Nothing
 
-                Hovering id ->
-                    Just id
+                Hovering id_ ->
+                    Just id_
 
-                Dragging id ->
-                    Just id
+                Dragging id_ ->
+                    Just id_
     in
-        case hoverDragId of
-            -- Hovering or dragging takes highlight precedence
-            Just hoverDragPointId ->
-                if hoverDragPointId == id then
-                    hoverDragColor
-                else
-                    normalColor
+    case hoverDragId of
+        -- Hovering or dragging takes highlight precedence
+        Just hoverDragPointId ->
+            if hoverDragPointId == id then
+                hoverDragColor
 
-            _ ->
+            else
                 normalColor
 
+        _ ->
+            normalColor
 
-viewPoints : Model -> List Form
+
+viewPoints : Model -> List (Shape Never)
 viewPoints model =
     let
         points =
@@ -126,26 +137,26 @@ viewPoints model =
 
         viewPoint ( id, point ) =
             circle pointRadius
-                |> Collage.filled (styleForPointId model id)
+                |> GraphicSVG.filled (styleForPointId model id)
                 |> move (toTuple point)
 
-        viewSelection : ( PointId, Point ) -> Maybe Form
+        viewSelection : ( PointId, Point ) -> Maybe (Shape Never)
         viewSelection ( id, point ) =
             case Dict.get id model.selectedPoints of
                 Just _ ->
                     rect (2 * pointRadius + 4) (2 * pointRadius + 4)
-                        |> outlined selectionLineStyle
+                        |> outlined selectionLineType selectedColor
                         |> move (toTuple point)
                         |> Just
 
                 Nothing ->
                     Nothing
     in
-        List.map viewPoint points
-            ++ List.filterMap viewSelection points
+    List.map viewPoint points
+        ++ List.filterMap viewSelection points
 
 
-viewEdges : Model -> List Form
+viewEdges : Model -> List (Shape Never)
 viewEdges model =
     let
         pointById id =
@@ -154,25 +165,26 @@ viewEdges model =
                 |> toTuple
 
         viewEdge { from, to } =
-            segment (pointById from) (pointById to)
-                |> traced { defaultLine | width = 2 }
+            line (pointById from) (pointById to)
+                |> outlined (solid 2) GraphicSVG.purple
     in
-        Dict.values model.edges |> List.map viewEdge
+    Dict.values model.edges |> List.map viewEdge
 
 
-viewIntersections : Model -> List Point -> List Form
+viewIntersections : Model -> List Point -> List (Shape Never)
 viewIntersections model intersections =
     let
         viewIntersection point =
-            circle 4 |> outlined { defaultLine | color = Color.red } |> move (toTuple point)
+            circle 4 |> outlined (solid 1) GraphicSVG.red |> move (toTuple point)
     in
-        List.map viewIntersection intersections
+    List.map viewIntersection intersections
 
 
 pluralize : String -> String -> number -> String
 pluralize singular plural count =
     if count == 1 then
         singular
+
     else
         plural
 
@@ -184,14 +196,14 @@ viewHUD model intersections =
             List.length intersections
 
         level =
-            div [ class "level" ] [ text <| "Level " ++ (toString model.levelNumber) ]
+            div [ class "level" ] [ text <| "Level " ++ toString model.levelNumber ]
 
         progress =
             div [ class "progress" ]
                 [ text <|
                     toString count
                         ++ " "
-                        ++ (pluralize "intersection" "intersections" count)
+                        ++ pluralize "intersection" "intersections" count
                 ]
 
         status =
@@ -200,10 +212,11 @@ viewHUD model intersections =
         className =
             if model.mode == Edit then
                 "hud editMode"
+
             else
                 "hud"
     in
-        div [ class className ] [ status, viewHUDActions model ]
+    div [ class className ] [ status, viewHUDActions model ]
 
 
 viewHUDActions : Model -> Html Msg
@@ -215,12 +228,14 @@ viewHUDActions model =
                     [ iconLabel "🎊" "Solved!"
                     , nextLevelButton
                     ]
+
                 else
                     [ editButton ]
 
             Edit ->
                 (if isSelectionEmpty model then
                     []
+
                  else
                     [ deleteButton, createEdgeButton model ]
                 )
@@ -280,6 +295,7 @@ viewLevelCodeModal model =
                 , button [ class "btn-3d green", onClick ToggleLevelCodeModal ] [ text "OK" ]
                 ]
             ]
+
     else
         div [ class "levelCodeModalBackdrop" ] []
 
@@ -288,7 +304,7 @@ levelToCode : Model -> String
 levelToCode model =
     let
         varName =
-            "level" ++ (toString model.levelNumber)
+            "level" ++ toString model.levelNumber
 
         showEdge : ( EdgeId, Edge ) -> String
         showEdge ( id, { from, to } ) =
@@ -300,13 +316,14 @@ levelToCode model =
                 ( x, y ) =
                     toTuple p
             in
-                "( \"" ++ id ++ "\", vec2 " ++ (toString x) ++ " " ++ (toString y) ++ " )"
+            "( \"" ++ id ++ "\", vec2 " ++ toString x ++ " " ++ toString y ++ " )"
 
         joinCodeLines a b =
             a
                 ++ "\n            "
                 ++ (if String.isEmpty b then
                         ""
+
                     else
                         ", "
                    )
@@ -322,18 +339,18 @@ levelToCode model =
                 |> List.map showEdge
                 |> List.foldl joinCodeLines ""
     in
-        varName
-            ++ " : Level\n"
-            ++ varName
-            ++ " =\n"
-            ++ "    { edges =\n"
-            ++ "        Dict.fromList\n"
-            ++ "            [ "
-            ++ edges
-            ++ "]\n"
-            ++ "    , points =\n"
-            ++ "        Dict.fromList\n"
-            ++ "            [ "
-            ++ points
-            ++ "]\n"
-            ++ "    }\n"
+    varName
+        ++ " : Level\n"
+        ++ varName
+        ++ " =\n"
+        ++ "    { edges =\n"
+        ++ "        Dict.fromList\n"
+        ++ "            [ "
+        ++ edges
+        ++ "]\n"
+        ++ "    , points =\n"
+        ++ "        Dict.fromList\n"
+        ++ "            [ "
+        ++ points
+        ++ "]\n"
+        ++ "    }\n"

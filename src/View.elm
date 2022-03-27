@@ -1,7 +1,6 @@
 module View exposing (view)
 
 import Constants exposing (pointRadius)
-import Debug exposing (toString)
 import Dict
 import Edge exposing (allIntersections)
 import GraphicSVG
@@ -18,10 +17,10 @@ import GraphicSVG
         )
 import GraphicSVG.Widget
 import Html exposing (Html, button, div, pre, span, text)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (class, disabled, style)
 import Html.Events exposing (onClick)
 import Math.Vector2 exposing (vec2)
-import Model exposing (isSelectionEmpty)
+import Model exposing (edgeExists, isSelectionEmpty)
 import Types
     exposing
         ( Cursor(..)
@@ -196,12 +195,12 @@ viewHUD model intersections =
             List.length intersections
 
         level =
-            div [ class "level" ] [ text <| "Level " ++ toString model.levelNumber ]
+            div [ class "level" ] [ text <| "Level " ++ String.fromInt model.levelNumber ]
 
         progress =
             div [ class "progress" ]
                 [ text <|
-                    toString count
+                    String.fromInt count
                         ++ " "
                         ++ pluralize "intersection" "intersections" count
                 ]
@@ -304,7 +303,7 @@ levelToCode : Model -> String
 levelToCode model =
     let
         varName =
-            "level" ++ toString model.levelNumber
+            "level" ++ String.fromInt model.levelNumber
 
         showEdge : ( EdgeId, Edge ) -> String
         showEdge ( id, { from, to } ) =
@@ -316,7 +315,7 @@ levelToCode model =
                 ( x, y ) =
                     toTuple p
             in
-            "( \"" ++ id ++ "\", vec2 " ++ toString x ++ " " ++ toString y ++ " )"
+            "( \"" ++ id ++ "\", vec2 " ++ String.fromFloat x ++ " " ++ String.fromFloat y ++ " )"
 
         joinCodeLines a b =
             a

@@ -1,7 +1,7 @@
 module Constants exposing (edgesForLevel, pointRadius, pointsForLevel)
 
 import Array exposing (Array)
-import Dict exposing (Dict)
+import Dict
 import Math.Vector2 exposing (vec2)
 import Types exposing (Edge, EdgeDict, PointDict)
 

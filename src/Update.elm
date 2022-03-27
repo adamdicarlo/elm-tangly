@@ -2,7 +2,6 @@ module Update exposing (init, update)
 
 import Browser.Dom exposing (Viewport, getViewport)
 import Constants exposing (edgesForLevel, pointsForLevel)
-import Debug exposing (toString)
 import Dict exposing (Dict)
 import Edge exposing (allIntersections)
 import Keyboard
@@ -62,7 +61,7 @@ update msg model =
         CreateEdge from to ->
             let
                 id =
-                    toString from ++ "-" ++ toString to
+                    from ++ "-" ++ to
             in
             ( { model | edges = Dict.insert id (Edge from to) model.edges }
             , Cmd.none
@@ -232,7 +231,7 @@ insertPoint points newPoint =
 
         -- TODO: Use random string value here
         id =
-            "p" ++ toString x ++ "," ++ toString y
+            "p" ++ String.fromFloat x ++ "," ++ String.fromFloat y
     in
     Dict.insert id newPoint points
 

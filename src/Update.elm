@@ -5,7 +5,7 @@ import Constants exposing (edgesForLevel, pointsForLevel)
 import Debug exposing (toString)
 import Dict exposing (Dict)
 import Edge exposing (allIntersections)
-import Keyboard.Key
+import Keyboard
 import Math.Vector2 exposing (Vec2, getX, getY, toRecord, vec2)
 import Model exposing (findPointNear, isSelectionEmpty, screenToPoint)
 import Task exposing (Task)
@@ -85,7 +85,7 @@ update msg model =
 
         KeyDown keyCode ->
             case keyCode of
-                Keyboard.Key.Shift _ ->
+                Keyboard.Shift ->
                     ( { model | additiveSelection = True }
                     , Cmd.none
                     )
@@ -97,7 +97,7 @@ update msg model =
 
         KeyUp keyCode ->
             case keyCode of
-                Keyboard.Key.Shift _ ->
+                Keyboard.Shift ->
                     ( { model | additiveSelection = False }
                     , Cmd.none
                     )

@@ -1,9 +1,7 @@
 module Types exposing (..)
 
-import Browser.Dom exposing (Viewport)
 import Dict exposing (Dict)
-import GraphicSVG.Widget
-import Keyboard.Key exposing (Key)
+import Keyboard exposing (Key(..))
 import Math.Vector2 exposing (Vec2)
 
 

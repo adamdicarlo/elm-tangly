@@ -1,7 +1,7 @@
 {
   "name": "elm-tangly",
   "version": "1.0.0",
-  "repository": "git@github.com:adamdicarlo/elm-tangly.git",
+  "repository": "https://github.com/adamdicarlo/elm-tangly",
   "author": "Adam DiCarlo <97462+adamdicarlo@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {

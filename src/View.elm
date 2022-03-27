@@ -252,7 +252,11 @@ createEdgeButton model =
     case Dict.keys model.selectedPoints of
         -- Exactly two vertices should be selected
         from :: to :: [] ->
-            button [ class "small green btn-3d", onClick <| CreateEdge from to ] [ iconLabel "🌟" "Create Edge" ]
+            if edgeExists model from to then
+                button [ class "small green btn-3d", disabled True ] [ iconLabel "🌟" "Create Edge" ]
+
+            else
+                button [ class "small green btn-3d", onClick <| CreateEdge from to ] [ iconLabel "🌟" "Create Edge" ]
 
         _ ->
             span [] []

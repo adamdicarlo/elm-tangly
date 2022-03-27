@@ -5,7 +5,8 @@
   "author": "Adam DiCarlo <97462+adamdicarlo@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "build": "parcel src/index.html",
+    "build": "parcel build src/index.html",
+    "start": "parcel serve src/index.html",
     "test": "elm-test"
   },
   "devDependencies": {

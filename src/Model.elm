@@ -13,9 +13,7 @@ import Types
 
 
 findPointNear : Dict PointId Point -> Point -> Maybe PointId
-
-findPointNear points test
-  =
+findPointNear points test =
     let
         distanceWithId : ( PointId, Point ) -> ( PointId, Float )
         distanceWithId ( id, point ) =

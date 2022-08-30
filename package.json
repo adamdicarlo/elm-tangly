@@ -19,6 +19,7 @@
     "@parcel/transformer-elm": "2.7.0",
     "elm": "^0.19.1-5",
     "elm-format": "^0.8.5",
+    "elm-json": "^0.2.12",
     "elm-test": "^0.19.1-revision9",
     "parcel": "^2.7.0",
     "prettier": "^2.7.1",

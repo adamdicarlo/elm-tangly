@@ -36,11 +36,11 @@ keyEvent model message =
                     Nothing ->
                         NoOp
     in
-    if model.mode /= Edit then
-        D.succeed NoOp
+    if model.mode == Edit then
+        D.map pickMsg Keyboard.eventKeyDecoder
 
     else
-        D.map pickMsg Keyboard.eventKeyDecoder
+        D.fail "keys only used in edit mode"
 
 
 mouseEvent : Model -> (Vec2 -> Msg) -> D.Decoder Msg

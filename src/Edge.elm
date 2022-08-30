@@ -51,9 +51,9 @@ intersect points r s =
     in
     if r.from == s.from || r.from == s.to || r.to == s.from || r.to == s.to then
         -- Ignore when both edges share a point; otherwise every single point is considered an
-        -- intersection. But what if the edges overlap? Any two edges ("A" and "B") can only
-        -- share at most a single point, so the non-shared point of one of them will be flagged
-        -- as an intersection when the other edge _it_ is attached to is checked against A or B.
+        -- intersection. But what if the edges overlap? Any two edges ("A" and "B") can only share
+        -- at most a single point, so the non-shared point of one of them will be flagged as an
+        -- intersection when the other edge _it_ is attached to is checked against A or B.
         Nothing
 
     else

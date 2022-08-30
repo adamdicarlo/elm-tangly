@@ -2,7 +2,7 @@ module Model exposing (..)
 
 import Constants exposing (pointRadius)
 import Dict exposing (Dict)
-import List.Extra
+import List.Extra as List
 import Math.Vector2 exposing (distanceSquared, vec2)
 import Types
     exposing
@@ -30,7 +30,7 @@ findPointNear points test =
     points
         |> Dict.toList
         |> List.map distanceWithId
-        |> List.Extra.minimumBy Tuple.second
+        |> List.minimumBy Tuple.second
         |> Maybe.andThen ifCloseEnough
 
 

@@ -1,7 +1,7 @@
 module Constants exposing (edgesForLevel, pointRadius, pointsForLevel)
 
-import Array exposing (Array)
 import Dict
+import List.Extra as List
 import Math.Vector2 exposing (vec2)
 import Types exposing (Edge, EdgeDict, PointDict)
 
@@ -12,26 +12,25 @@ type alias Level =
 
 pointsForLevel : Int -> PointDict
 pointsForLevel n =
-    Array.get (n - 1) levels
+    List.getAt (n - 1) levels
         |> Maybe.withDefault level1
         |> .points
 
 
 edgesForLevel : Int -> EdgeDict
 edgesForLevel n =
-    Array.get (n - 1) levels
+    List.getAt (n - 1) levels
         |> Maybe.withDefault level1
         |> .edges
 
 
-levels : Array Level
+levels : List Level
 levels =
-    Array.fromList
-        [ level1
-        , level2
-        , level3
-        , level4
-        ]
+    [ level1
+    , level2
+    , level3
+    , level4
+    ]
 
 
 level1 : Level

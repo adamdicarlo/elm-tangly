@@ -150,7 +150,7 @@ intersectSegments p pr q qs =
 
 isBetween : number -> number -> number -> Bool
 isBetween min max value =
-    clamp min max value == value
+    value >= min && value <= max
 
 
 floatThreshold : Float

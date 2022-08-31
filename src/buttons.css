@@ -42,7 +42,7 @@
   background-color: #82d1e3;
 }
 
-.btn-3d:active {
+.btn-3d:active:not([disabled]) {
   top: 9px;
 }
 
@@ -53,7 +53,7 @@
     0 8px 0 0 #c24032, 0 8px 0 1px rgba(0, 0, 0, 0.4),
     0 8px 8px 1px rgba(0, 0, 0, 0.5);
 }
-.btn-3d.red:active {
+.btn-3d.red:active:not([disabled]) {
   box-shadow: 0 0 0 1px #c63702 inset, 0 0 0 2px rgba(255, 255, 255, 0.15) inset,
     0 0 0 1px rgba(0, 0, 0, 0.4);
 }
@@ -64,7 +64,7 @@
     0 8px 0 0 rgba(110, 164, 219, 0.7), 0 8px 0 1px rgba(0, 0, 0, 0.4),
     0 8px 8px 1px rgba(0, 0, 0, 0.5);
 }
-.btn-3d.blue:active {
+.btn-3d.blue:active:not([disabled]) {
   box-shadow: 0 0 0 1px #6191c2 inset, 0 0 0 2px rgba(255, 255, 255, 0.15) inset,
     0 0 0 1px rgba(0, 0, 0, 0.4);
 }
@@ -75,7 +75,7 @@
     0 8px 0 0 rgba(126, 194, 155, 0.7), 0 8px 0 1px rgba(0, 0, 0, 0.4),
     0 8px 8px 1px rgba(0, 0, 0, 0.5);
 }
-.btn-3d.green:active {
+.btn-3d.green:active:not([disabled]) {
   box-shadow: 0 0 0 1px #82c8a0 inset, 0 0 0 2px rgba(255, 255, 255, 0.15) inset,
     0 0 0 1px rgba(0, 0, 0, 0.4);
 }
@@ -86,7 +86,7 @@
     0 8px 0 0 rgba(189, 142, 183, 0.7), 0 8px 0 1px rgba(0, 0, 0, 0.4),
     0 8px 8px 1px rgba(0, 0, 0, 0.5);
 }
-.btn-3d.purple:active {
+.btn-3d.purple:active:not([disabled]) {
   box-shadow: 0 0 0 1px #cb99c5 inset, 0 0 0 2px rgba(255, 255, 255, 0.15) inset,
     0 0 0 1px rgba(0, 0, 0, 0.4);
 }
@@ -97,7 +97,7 @@
     0 8px 0 0 rgba(102, 164, 178, 0.6), 0 8px 0 1px rgba(0, 0, 0, 0.4),
     0 8px 8px 1px rgba(0, 0, 0, 0.5);
 }
-.btn-3d.cyan:active {
+.btn-3d.cyan:active:not([disabled]) {
   box-shadow: 0 0 0 1px #7fccde inset, 0 0 0 2px rgba(255, 255, 255, 0.15) inset,
     0 0 0 1px rgba(0, 0, 0, 0.4);
 }
@@ -108,7 +108,15 @@
     0 8px 0 0 rgba(196, 172, 83, 0.7), 0 8px 0 1px rgba(0, 0, 0, 0.4),
     0 8px 8px 1px rgba(0, 0, 0, 0.5);
 }
-.btn-3d.yellow:active {
+.btn-3d.yellow:active:not([disabled]) {
   box-shadow: 0 0 0 1px #f0d264 inset, 0 0 0 2px rgba(255, 255, 255, 0.15) inset,
     0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.btn-3d[disabled]:hover,
+.btn-3d[disabled] {
+  background-color: #a4a1a3;
+  box-shadow: 0 0 0 1px #a4a1a3 inset, 0 0 0 2px rgba(255, 255, 255, 0.15) inset,
+    0 8px 0 0 rgba(172, 172, 172, 0.7), 0 8px 0 1px rgba(0, 0, 0, 0.4),
+    0 8px 8px 1px rgba(0, 0, 0, 0.5);
 }

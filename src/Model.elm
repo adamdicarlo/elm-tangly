@@ -4,6 +4,7 @@ import Constants exposing (pointRadius)
 import Dict exposing (Dict)
 import List.Extra as List
 import Math.Vector2 exposing (distanceSquared, vec2)
+import Set
 import Types
     exposing
         ( Model
@@ -36,7 +37,7 @@ findPointNear points test =
 
 isSelectionEmpty : Model -> Bool
 isSelectionEmpty model =
-    Dict.isEmpty model.selectedEdges && Dict.isEmpty model.selectedPoints
+    Set.isEmpty model.selectedEdges && Set.isEmpty model.selectedPoints
 
 
 edgeExists : Model -> PointId -> PointId -> Bool

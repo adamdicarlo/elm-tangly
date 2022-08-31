@@ -21,6 +21,7 @@ import Html.Attributes exposing (class, disabled, style)
 import Html.Events exposing (onClick)
 import Math.Vector2 exposing (vec2)
 import Model exposing (edgeExists, isSelectionEmpty)
+import Set
 import Types
     exposing
         ( Cursor(..)
@@ -104,28 +105,23 @@ selectionLineType =
 styleForPointId : Model -> PointId -> Color
 styleForPointId model id =
     let
-        hoverDragId =
-            case model.cursor of
-                Bored ->
-                    Nothing
-
-                Hovering id_ ->
-                    Just id_
-
-                Dragging id_ ->
-                    Just id_
-    in
-    case hoverDragId of
-        -- Hovering or dragging takes highlight precedence
-        Just hoverDragPointId ->
+        chooseColor hoverDragPointId =
+            -- Hovering or dragging takes highlight precedence
             if hoverDragPointId == id then
                 hoverDragColor
 
             else
                 normalColor
-
-        _ ->
+    in
+    case model.cursor of
+        Bored ->
             normalColor
+
+        Hovering id_ ->
+            chooseColor id_
+
+        Dragging id_ ->
+            chooseColor id_
 
 
 viewPoints : Model -> List (Shape Never)
@@ -141,18 +137,19 @@ viewPoints model =
 
         viewSelection : ( PointId, Point ) -> Maybe (Shape Never)
         viewSelection ( id, point ) =
-            case Dict.get id model.selectedPoints of
-                Just _ ->
-                    rect (2 * pointRadius + 4) (2 * pointRadius + 4)
-                        |> outlined selectionLineType selectedColor
-                        |> move (toTuple point)
-                        |> Just
+            if Set.member id model.selectedPoints then
+                rect (2 * pointRadius + 4) (2 * pointRadius + 4)
+                    |> outlined selectionLineType selectedColor
+                    |> move (toTuple point)
+                    |> Just
 
-                Nothing ->
-                    Nothing
+            else
+                Nothing
     in
-    List.map viewPoint points
-        ++ List.filterMap viewSelection points
+    List.concat
+        [ List.map viewPoint points
+        , List.filterMap viewSelection points
+        ]
 
 
 viewEdges : Model -> List (Shape Never)
@@ -179,13 +176,16 @@ viewIntersections model intersections =
     List.map viewIntersection intersections
 
 
-pluralize : String -> String -> number -> String
+pluralize : String -> String -> Int -> String
 pluralize singular plural count =
-    if count == 1 then
-        singular
+    String.join " "
+        [ String.fromInt count
+        , if count == 1 then
+            singular
 
-    else
-        plural
+          else
+            plural
+        ]
 
 
 viewHUD : Model -> List Point -> Html Msg
@@ -195,14 +195,18 @@ viewHUD model intersections =
             List.length intersections
 
         level =
-            div [ class "level" ] [ text <| "Level " ++ String.fromInt model.levelNumber ]
+            div [ class "level" ]
+                [ String.concat
+                    [ "Level "
+                    , String.fromInt model.levelNumber
+                    ]
+                    |> text
+                ]
 
         progress =
             div [ class "progress" ]
-                [ text <|
-                    String.fromInt count
-                        ++ " "
-                        ++ pluralize "intersection" "intersections" count
+                [ pluralize "intersection" "intersections" count
+                    |> text
                 ]
 
         status =
@@ -232,13 +236,14 @@ viewHUDActions model =
                     [ editButton ]
 
             Edit ->
-                (if isSelectionEmpty model then
-                    []
+                List.concat
+                    [ if isSelectionEmpty model then
+                        []
 
-                 else
-                    [ deleteButton, createEdgeButton model ]
-                )
-                    ++ [ levelCodeButton, playButton ]
+                      else
+                        [ deleteButton, createEdgeButton model ]
+                    , [ levelCodeButton, playButton ]
+                    ]
         )
 
 
@@ -249,11 +254,11 @@ iconLabel icon label =
 
 createEdgeButton : Model -> Html Msg
 createEdgeButton model =
-    case Dict.keys model.selectedPoints of
+    case Set.toList model.selectedPoints of
         -- Exactly two vertices should be selected
         from :: to :: [] ->
             if edgeExists model from to then
-                button [ class "small green btn-3d", disabled True ] [ iconLabel "🌟" "Create Edge" ]
+                button [ class "small yellow disabled btn-3d", disabled True ] [ iconLabel "🌟" "Create Edge" ]
 
             else
                 button [ class "small green btn-3d", onClick <| CreateEdge from to ] [ iconLabel "🌟" "Create Edge" ]
@@ -303,6 +308,16 @@ viewLevelCodeModal model =
         div [ class "levelCodeModalBackdrop" ] []
 
 
+format3 : String -> String -> String -> String -> String
+format3 format a b c =
+    case format |> String.split "%" of
+        w :: x :: y :: [ z ] ->
+            w ++ a ++ x ++ b ++ y ++ c ++ z
+
+        _ ->
+            Debug.todo "boom"
+
+
 levelToCode : Model -> String
 levelToCode model =
     let
@@ -311,7 +326,11 @@ levelToCode model =
 
         showEdge : ( EdgeId, Edge ) -> String
         showEdge ( id, { from, to } ) =
-            "( \"" ++ id ++ "\", Edge \"" ++ from ++ "\" \"" ++ to ++ "\" )"
+            format3
+                "( \"%\", Edge % % )"
+                id
+                from
+                to
 
         showPoint : ( PointId, Point ) -> String
         showPoint ( id, p ) =
@@ -319,18 +338,22 @@ levelToCode model =
                 ( x, y ) =
                     toTuple p
             in
-            "( \"" ++ id ++ "\", vec2 " ++ String.fromFloat x ++ " " ++ String.fromFloat y ++ " )"
+            format3
+                "( \"%\", vec2 % % )"
+                id
+                (String.fromFloat x)
+                (String.fromFloat y)
 
         joinCodeLines a b =
-            a
-                ++ "\n            "
-                ++ (if String.isEmpty b then
-                        ""
+            [ a
+            , if String.isEmpty b then
+                ""
 
-                    else
-                        ", "
-                   )
-                ++ b
+              else
+                "\n            , "
+            , b
+            ]
+                |> String.concat
 
         points =
             Dict.toList model.points
@@ -342,18 +365,16 @@ levelToCode model =
                 |> List.map showEdge
                 |> List.foldl joinCodeLines ""
     in
-    varName
-        ++ " : Level\n"
-        ++ varName
-        ++ " =\n"
-        ++ "    { edges =\n"
-        ++ "        Dict.fromList\n"
-        ++ "            [ "
-        ++ edges
-        ++ "]\n"
-        ++ "    , points =\n"
-        ++ "        Dict.fromList\n"
-        ++ "            [ "
-        ++ points
-        ++ "]\n"
-        ++ "    }\n"
+    [ varName ++ " : Level"
+    , varName ++ " ="
+    , "    { edges ="
+    , "        Dict.fromList"
+    , "            [ " ++ edges
+    , "            ]"
+    , "    , points ="
+    , "        Dict.fromList"
+    , "            [ " ++ points
+    , "            ]"
+    , "    }"
+    ]
+        |> String.join "\n"

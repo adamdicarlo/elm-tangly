@@ -2,11 +2,12 @@ module Update exposing (init, update)
 
 import Browser.Dom exposing (Viewport, getViewport)
 import Constants exposing (edgesForLevel, pointsForLevel)
-import Dict exposing (Dict)
+import Dict
 import Edge exposing (allIntersections)
 import Keyboard
 import Math.Vector2 exposing (Vec2, getX, getY, toRecord, vec2)
 import Model exposing (findPointNear, isSelectionEmpty, screenToPoint)
+import Set exposing (Set)
 import Task exposing (Task)
 import Types
     exposing
@@ -38,8 +39,8 @@ init =
       , levelSolved = False
       , mode = Edit --Play
       , points = pointsForLevel 1
-      , selectedEdges = Dict.empty
-      , selectedPoints = Dict.empty
+      , selectedEdges = Set.empty
+      , selectedPoints = Set.empty
       }
     , Task.perform WindowSize getWindowSize
     )
@@ -76,8 +77,8 @@ update msg model =
                         -- then delete edges that reference deleted points
                         |> deleteEdgesWithPoints model.selectedPoints
                 , points = deletePoints model.selectedPoints model.points
-                , selectedEdges = Dict.empty
-                , selectedPoints = Dict.empty
+                , selectedEdges = Set.empty
+                , selectedPoints = Set.empty
               }
             , Cmd.none
             )
@@ -119,26 +120,37 @@ update msg model =
                         model.selectedPoints
 
                     else
-                        Dict.empty
+                        Set.empty
             in
             case maybePointId of
                 Just pointId ->
                     ( { model
                         | cursor = Dragging pointId
                         , selectedPoints =
-                            Dict.update pointId (toggleMaybe ()) baseSelection
+                            if baseSelection |> Set.member pointId then
+                                Set.remove pointId baseSelection
+
+                            else
+                                Set.insert pointId baseSelection
                       }
                     , Cmd.none
                     )
 
                 Nothing ->
                     if model.mode == Edit && isSelectionEmpty model then
-                        ( { model | cursor = Bored, points = insertPoint model.points location }
+                        ( { model
+                            | cursor = Bored
+                            , points = insertPoint model.points location
+                          }
                         , Cmd.none
                         )
 
                     else
-                        ( { model | cursor = Bored, selectedPoints = Dict.empty, selectedEdges = Dict.empty }
+                        ( { model
+                            | cursor = Bored
+                            , selectedPoints = Set.empty
+                            , selectedEdges = Set.empty
+                          }
                         , Cmd.none
                         )
 
@@ -236,18 +248,21 @@ insertPoint points newPoint =
     Dict.insert id newPoint points
 
 
-deleteEdges : Dict EdgeId () -> EdgeDict -> EdgeDict
+deleteEdges : Set EdgeId -> EdgeDict -> EdgeDict
 deleteEdges doomed edges =
+    -- TODO
     edges
 
 
-deleteEdgesWithPoints : Dict PointId () -> EdgeDict -> EdgeDict
+deleteEdgesWithPoints : Set PointId -> EdgeDict -> EdgeDict
 deleteEdgesWithPoints points edges =
+    -- TODO
     edges
 
 
-deletePoints : Dict PointId () -> PointDict -> PointDict
+deletePoints : Set PointId -> PointDict -> PointDict
 deletePoints doomed points =
+    -- TODO
     points
 
 

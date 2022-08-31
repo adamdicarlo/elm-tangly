@@ -3,6 +3,7 @@ module Types exposing (..)
 import Dict exposing (Dict)
 import Keyboard exposing (Key(..))
 import Math.Vector2 exposing (Vec2)
+import Set exposing (Set)
 
 
 type alias Point =
@@ -42,8 +43,8 @@ type alias Model =
     , levelSolved : Bool
     , mode : Mode
     , points : PointDict
-    , selectedEdges : Dict EdgeId ()
-    , selectedPoints : Dict PointId ()
+    , selectedEdges : Set EdgeId
+    , selectedPoints : Set PointId
     }
 
 

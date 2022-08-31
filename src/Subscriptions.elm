@@ -2,7 +2,7 @@ module Subscriptions exposing (subscriptions)
 
 import Browser.Events exposing (onKeyDown, onKeyUp, onMouseDown, onMouseMove, onMouseUp, onResize)
 import Json.Decode as D
-import Keyboard exposing (Key(..), eventKeyDecoder)
+import Keyboard exposing (Key(..))
 import Math.Vector2 exposing (Vec2, getX, getY, vec2)
 import Types exposing (Mode(..), Model, Msg(..))
 

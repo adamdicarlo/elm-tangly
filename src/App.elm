@@ -1,4 +1,4 @@
-module App exposing (..)
+module App exposing (main)
 
 import Browser
 import Subscriptions exposing (subscriptions)

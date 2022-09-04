@@ -61,6 +61,7 @@ update msg model =
     case msg of
         CreateEdge from to ->
             let
+                id : PointId
                 id =
                     from ++ "-" ++ to
             in
@@ -109,21 +110,25 @@ update msg model =
 
         MouseDown pos ->
             let
+                location : Point
                 location =
                     screenToPoint model (getX pos) (getY pos)
 
+                maybePointId : Maybe PointId
                 maybePointId =
                     findPointNear model.points location
-
-                baseSelection =
-                    if model.additiveSelection then
-                        model.selectedPoints
-
-                    else
-                        Set.empty
             in
             case maybePointId of
                 Just pointId ->
+                    let
+                        baseSelection : Set PointId
+                        baseSelection =
+                            if model.additiveSelection then
+                                model.selectedPoints
+
+                            else
+                                Set.empty
+                    in
                     ( { model
                         | cursor = Dragging pointId
                         , selectedPoints =
@@ -159,6 +164,7 @@ update msg model =
                 { x, y } =
                     toRecord pos
 
+                mousePoint : Point
                 mousePoint =
                     screenToPoint model x y
             in
@@ -170,6 +176,7 @@ update msg model =
 
                 _ ->
                     let
+                        cursor : Cursor
                         cursor =
                             findPointNear model.points mousePoint
                                 |> Maybe.map Hovering
@@ -179,7 +186,7 @@ update msg model =
                     , Cmd.none
                     )
 
-        MouseUp _ ->
+        MouseUp ->
             ( { model
                 | cursor =
                     case model.cursor of
@@ -242,6 +249,7 @@ insertPoint points newPoint =
             toRecord newPoint
 
         -- TODO: Use random string value here
+        id : String
         id =
             "p" ++ String.fromFloat x ++ "," ++ String.fromFloat y
     in
@@ -249,36 +257,27 @@ insertPoint points newPoint =
 
 
 deleteEdges : Set EdgeId -> EdgeDict -> EdgeDict
-deleteEdges doomed edges =
+deleteEdges _ edges =
     -- TODO
     edges
 
 
 deleteEdgesWithPoints : Set PointId -> EdgeDict -> EdgeDict
-deleteEdgesWithPoints points edges =
+deleteEdgesWithPoints _ edges =
     -- TODO
     edges
 
 
 deletePoints : Set PointId -> PointDict -> PointDict
-deletePoints doomed points =
+deletePoints _ points =
     -- TODO
     points
-
-
-toggleMaybe : a -> Maybe a -> Maybe a
-toggleMaybe valueIfOn maybe =
-    case maybe of
-        Just _ ->
-            Nothing
-
-        Nothing ->
-            Just valueIfOn
 
 
 updateDragPoint : Model -> PointId -> Point -> Model
 updateDragPoint model id newValue =
     let
+        updater : Maybe a -> Maybe Point
         updater =
             Maybe.map (\_ -> newValue)
     in

@@ -1,11 +1,20 @@
-module Tests exposing (..)
+module Tests exposing
+    ( intersectHorizontalCollinearSegmentsTests
+    , intersectHorizontalSegmentsTests
+    , intersectParallelSegmentsTests
+    , intersectSlantedCollinearSegmentsTests
+    , intersectSlantedSegmentsTests
+    , intersectVerticalCollinearSegmentsTests
+    , intersectVerticalSegmentsTests
+    , nearlyEqualTests
+    )
 
-import Dict
+import Dict exposing (Dict)
 import Edge exposing (intersect, nearlyEqual)
 import Expect
-import Math.Vector2 exposing (vec2)
-import Test exposing (Test, describe, only, skip, test, todo)
-import Types exposing (Edge)
+import Math.Vector2 exposing (Vec2, vec2)
+import Test exposing (Test, describe, test)
+import Types exposing (Edge, PointId)
 
 
 intersectVerticalCollinearSegmentsTests : Test
@@ -14,6 +23,7 @@ intersectVerticalCollinearSegmentsTests =
         [ test "that intersect, first below second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 -5 5 ), ( "1", vec2 -5 0 ), ( "2", vec2 -5 8 ), ( "3", vec2 -5 4 ) ]
@@ -22,6 +32,7 @@ intersectVerticalCollinearSegmentsTests =
         , test "that intersect, second below first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 -5 8 ), ( "1", vec2 -5 4 ), ( "2", vec2 -5 5 ), ( "3", vec2 -5 0 ) ]
@@ -30,6 +41,7 @@ intersectVerticalCollinearSegmentsTests =
         , test "that do NOT intersect, first below second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 -5 5 ), ( "1", vec2 -5 0 ), ( "2", vec2 -5 8 ), ( "3", vec2 -5 6 ) ]
@@ -38,6 +50,7 @@ intersectVerticalCollinearSegmentsTests =
         , test "that do NOT intersect, second below first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 -5 8 ), ( "1", vec2 -5 6 ), ( "2", vec2 -5 5 ), ( "3", vec2 -5 0 ) ]
@@ -52,6 +65,7 @@ intersectParallelSegmentsTests =
         [ test "that are vertical" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 5 0 ), ( "1", vec2 5 10 ), ( "2", vec2 0 0 ), ( "3", vec2 0 10 ) ]
@@ -60,6 +74,7 @@ intersectParallelSegmentsTests =
         , test "that are horizontal" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 5 0 ), ( "2", vec2 0 -5 ), ( "3", vec2 6 -5 ) ]
@@ -68,6 +83,7 @@ intersectParallelSegmentsTests =
         , test "that are slanted up-right" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 7 7 ), ( "2", vec2 1 0 ), ( "3", vec2 8 7 ) ]
@@ -76,6 +92,7 @@ intersectParallelSegmentsTests =
         , test "that are slanted down-right" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 7 ), ( "1", vec2 7 0 ), ( "2", vec2 1 8 ), ( "3", vec2 8 1 ) ]
@@ -90,6 +107,7 @@ intersectSlantedCollinearSegmentsTests =
         [ test "that intersect" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 5 5 ), ( "3", vec2 15 15 ) ]
@@ -98,6 +116,7 @@ intersectSlantedCollinearSegmentsTests =
         , test "that do NOT intersect, second above-right of first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 10.1 10.1 ), ( "3", vec2 15 15 ) ]
@@ -106,6 +125,7 @@ intersectSlantedCollinearSegmentsTests =
         , test "that do NOT intersect, first above-right of second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 10.1 10.1 ), ( "1", vec2 15 15 ), ( "2", vec2 1 1 ), ( "3", vec2 10 10 ) ]
@@ -120,6 +140,7 @@ intersectSlantedSegmentsTests =
         [ test "that intersect" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 1 10 ), ( "3", vec2 10 1 ) ]
@@ -128,6 +149,7 @@ intersectSlantedSegmentsTests =
         , test "that intersect (2)" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 5 10 ), ( "2", vec2 0 5 ), ( "3", vec2 5 5 ) ]
@@ -136,6 +158,7 @@ intersectSlantedSegmentsTests =
         , test "that do NOT intersect" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 1 1 ), ( "1", vec2 10 10 ), ( "2", vec2 2 1 ), ( "3", vec2 11 10 ) ]
@@ -144,6 +167,7 @@ intersectSlantedSegmentsTests =
         , test "that do NOT intersect (2)" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 5 10 ), ( "2", vec2 0.1 0 ), ( "3", vec2 5.1 9.9 ) ]
@@ -158,6 +182,7 @@ intersectHorizontalCollinearSegmentsTests =
         [ test "that DO intersect, first left of second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 -5 -5 ), ( "1", vec2 0 -5 ), ( "2", vec2 -2 -5 ), ( "3", vec2 3 -5 ) ]
@@ -166,6 +191,7 @@ intersectHorizontalCollinearSegmentsTests =
         , test "that DO intersect, second left of first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 5 0 ), ( "2", vec2 -2 0 ), ( "3", vec2 2 0 ) ]
@@ -174,6 +200,7 @@ intersectHorizontalCollinearSegmentsTests =
         , test "that DO intersect, first contained within second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 1 0 ), ( "1", vec2 2 0 ), ( "2", vec2 0 0 ), ( "3", vec2 10 0 ) ]
@@ -182,6 +209,7 @@ intersectHorizontalCollinearSegmentsTests =
         , test "that DO intersect, second contained within first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 10 0 ), ( "2", vec2 1 0 ), ( "3", vec2 2 0 ) ]
@@ -190,6 +218,7 @@ intersectHorizontalCollinearSegmentsTests =
         , test "that DO NOT intersect, first left of second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 -5 -5 ), ( "1", vec2 0 -5 ), ( "2", vec2 2 -5 ), ( "3", vec2 5 -5 ) ]
@@ -198,6 +227,7 @@ intersectHorizontalCollinearSegmentsTests =
         , test "that DO NOT intersect, first right of second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 2 -5 ), ( "1", vec2 5 -5 ), ( "2", vec2 -5 -5 ), ( "3", vec2 0 -5 ) ]
@@ -212,13 +242,16 @@ intersectHorizontalSegmentsTests =
         [ test "that DO NOT intersect" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 10 1 ), ( "1", vec2 20 1 ), ( "2", vec2 10 55 ), ( "3", vec2 20 55 ) ]
 
+                    edge1 : Edge
                     edge1 =
                         Edge "0" "1"
 
+                    edge2 : Edge
                     edge2 =
                         Edge "2" "3"
                 in
@@ -226,13 +259,16 @@ intersectHorizontalSegmentsTests =
         , test "that DO intersect, second after first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 10 1 ), ( "1", vec2 20 1 ), ( "2", vec2 19 1 ), ( "3", vec2 30 1 ) ]
 
+                    edge1 : Edge
                     edge1 =
                         Edge "0" "1"
 
+                    edge2 : Edge
                     edge2 =
                         Edge "2" "3"
                 in
@@ -240,13 +276,16 @@ intersectHorizontalSegmentsTests =
         , test "that DO intersect, first after second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 10 1 ), ( "1", vec2 20 1 ), ( "2", vec2 8 1 ), ( "3", vec2 12 1 ) ]
 
+                    edge1 : Edge
                     edge1 =
                         Edge "0" "1"
 
+                    edge2 : Edge
                     edge2 =
                         Edge "2" "3"
                 in
@@ -254,13 +293,16 @@ intersectHorizontalSegmentsTests =
         , test "that DO intersect, second contained within first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 0 ), ( "1", vec2 10 0 ), ( "2", vec2 1 0 ), ( "3", vec2 9 0 ) ]
 
+                    edge1 : Edge
                     edge1 =
                         Edge "0" "1"
 
+                    edge2 : Edge
                     edge2 =
                         Edge "2" "3"
                 in
@@ -268,13 +310,16 @@ intersectHorizontalSegmentsTests =
         , test "that DO intersect, first contained within second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 1 0 ), ( "1", vec2 2 0 ), ( "2", vec2 0 0 ), ( "3", vec2 5 0 ) ]
 
+                    edge1 : Edge
                     edge1 =
                         Edge "0" "1"
 
+                    edge2 : Edge
                     edge2 =
                         Edge "2" "3"
                 in
@@ -288,13 +333,16 @@ intersectVerticalSegmentsTests =
         [ test "that DO NOT intersect, first BELOW second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 5 1 ), ( "1", vec2 5 10 ), ( "2", vec2 5.00001 10.1 ), ( "3", vec2 5.000011 20 ) ]
 
+                    edge1 : Edge
                     edge1 =
                         Edge "0" "1"
 
+                    edge2 : Edge
                     edge2 =
                         Edge "2" "3"
                 in
@@ -302,13 +350,16 @@ intersectVerticalSegmentsTests =
         , test "that DO NOT intersect, first ABOVE second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 5 1 ), ( "1", vec2 5 10 ), ( "2", vec2 5.00001 0 ), ( "3", vec2 5.000011 0.9 ) ]
 
+                    edge1 : Edge
                     edge1 =
                         Edge "0" "1"
 
+                    edge2 : Edge
                     edge2 =
                         Edge "2" "3"
                 in
@@ -316,6 +367,7 @@ intersectVerticalSegmentsTests =
         , test "that DO intersect, second ABOVE first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 -5 ), ( "1", vec2 0 3 ), ( "2", vec2 0 1 ), ( "3", vec2 0 5 ) ]
@@ -324,6 +376,7 @@ intersectVerticalSegmentsTests =
         , test "that DO intersect, first ABOVE second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 0 -5 ), ( "1", vec2 0 3 ), ( "2", vec2 0 -8 ), ( "3", vec2 0 -3 ) ]
@@ -332,6 +385,7 @@ intersectVerticalSegmentsTests =
         , test "that DO intersect, second contained within first" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 7 0 ), ( "1", vec2 7 10 ), ( "2", vec2 7 8 ), ( "3", vec2 7 4 ) ]
@@ -340,6 +394,7 @@ intersectVerticalSegmentsTests =
         , test "that DO intersect, first contained within second" <|
             \_ ->
                 let
+                    points : Dict PointId Vec2
                     points =
                         Dict.fromList
                             [ ( "0", vec2 7 8 ), ( "1", vec2 7 4 ), ( "2", vec2 7 0 ), ( "3", vec2 7 10 ) ]

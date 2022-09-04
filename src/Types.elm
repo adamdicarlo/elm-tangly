@@ -1,7 +1,7 @@
-module Types exposing (..)
+module Types exposing (Cursor(..), Edge, EdgeDict, EdgeId, Mode(..), Model, Msg(..), Point, PointDict, PointId)
 
 import Dict exposing (Dict)
-import Keyboard exposing (Key(..))
+import Keyboard exposing (Key)
 import Math.Vector2 exposing (Vec2)
 import Set exposing (Set)
 
@@ -67,7 +67,7 @@ type Msg
     | KeyUp Key
     | MouseDown Vec2
     | MouseMove Vec2
-    | MouseUp Vec2
+    | MouseUp
     | NextLevel
     | NoOp
     | PlayMode

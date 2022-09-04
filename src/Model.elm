@@ -1,4 +1,4 @@
-module Model exposing (..)
+module Model exposing (edgeExists, findPointNear, isSelectionEmpty, screenToPoint)
 
 import Constants exposing (pointRadius)
 import Dict exposing (Dict)
@@ -20,6 +20,7 @@ findPointNear points test =
         distanceWithId ( id, point ) =
             ( id, distanceSquared point test )
 
+        ifCloseEnough : ( a, Float ) -> Maybe a
         ifCloseEnough ( id, dist2 ) =
             if sqrt dist2 < pointRadius then
                 Just id
@@ -53,9 +54,11 @@ edgeExists model p1 p2 =
 screenToPoint : Model -> Float -> Float -> Point
 screenToPoint model x y =
     let
+        xOrigin : Float
         xOrigin =
             model.width / 2.0
 
+        yOrigin : Float
         yOrigin =
             model.height / 2.0
     in

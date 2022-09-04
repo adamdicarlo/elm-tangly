@@ -48,9 +48,11 @@ fallbackPoint =
 view : Model -> Html Msg
 view ({ edges, points, width, height } as model) =
     let
+        intersections : List Point
         intersections =
             allIntersections points edges
 
+        canvas : Html a
         canvas =
             List.concat
                 [ viewEdges model
@@ -59,6 +61,7 @@ view ({ edges, points, width, height } as model) =
                 ]
                 |> GraphicSVG.Widget.icon "gfx" width height
 
+        canvasStyleAttrs : List (Html.Attribute msg)
         canvasStyleAttrs =
             case model.cursor of
                 Bored ->
@@ -105,6 +108,7 @@ selectionLineType =
 styleForPointId : Model -> PointId -> Color
 styleForPointId model id =
     let
+        chooseColor : PointId -> Color
         chooseColor hoverDragPointId =
             -- Hovering or dragging takes highlight precedence
             if hoverDragPointId == id then
@@ -127,9 +131,11 @@ styleForPointId model id =
 viewPoints : Model -> List (Shape Never)
 viewPoints model =
     let
+        points : List ( PointId, Math.Vector2.Vec2 )
         points =
             Dict.toList model.points
 
+        viewPoint : ( PointId, Point ) -> Shape userMsg
         viewPoint ( id, point ) =
             circle pointRadius
                 |> GraphicSVG.filled (styleForPointId model id)
@@ -155,11 +161,13 @@ viewPoints model =
 viewEdges : Model -> List (Shape Never)
 viewEdges model =
     let
+        pointById : PointId -> ( Float, Float )
         pointById id =
             Dict.get id model.points
                 |> Maybe.withDefault fallbackPoint
                 |> toTuple
 
+        viewEdge : { from : PointId, to : PointId } -> Shape Never
         viewEdge { from, to } =
             line (pointById from) (pointById to)
                 |> outlined (solid 2) GraphicSVG.purple
@@ -168,8 +176,9 @@ viewEdges model =
 
 
 viewIntersections : Model -> List Point -> List (Shape Never)
-viewIntersections model intersections =
+viewIntersections _ intersections =
     let
+        viewIntersection : Point -> Shape Never
         viewIntersection point =
             circle 4 |> outlined (solid 1) GraphicSVG.red |> move (toTuple point)
     in
@@ -191,9 +200,11 @@ pluralize singular plural count =
 viewHUD : Model -> List Point -> Html Msg
 viewHUD model intersections =
     let
+        count : Int
         count =
             List.length intersections
 
+        level : Html Msg
         level =
             div [ class "level" ]
                 [ String.concat
@@ -203,15 +214,18 @@ viewHUD model intersections =
                     |> text
                 ]
 
+        progress : Html Msg
         progress =
             div [ class "progress" ]
                 [ pluralize "intersection" "intersections" count
                     |> text
                 ]
 
+        status : Html Msg
         status =
             div [ class "statusContainer" ] [ level, progress ]
 
+        className : String
         className =
             if model.mode == Edit then
                 "hud editMode"
@@ -258,7 +272,7 @@ createEdgeButton model =
         -- Exactly two vertices should be selected
         from :: to :: [] ->
             if edgeExists model from to then
-                button [ class "small yellow disabled btn-3d", disabled True ] [ iconLabel "🌟" "Create Edge" ]
+                button [ class "small gray disabled btn-3d", disabled True ] [ iconLabel "🌟" "Create Edge" ]
 
             else
                 button [ class "small green btn-3d", onClick <| CreateEdge from to ] [ iconLabel "🌟" "Create Edge" ]
@@ -312,15 +326,16 @@ format3 : String -> String -> String -> String -> String
 format3 format a b c =
     case format |> String.split "%" of
         w :: x :: y :: [ z ] ->
-            w ++ a ++ x ++ b ++ y ++ c ++ z
+            [ w, a, x, b, y, c, z ] |> String.concat
 
         _ ->
-            Debug.todo "boom"
+            [ "Bug in format passed to format3:", format ] |> String.concat
 
 
 levelToCode : Model -> String
 levelToCode model =
     let
+        varName : String
         varName =
             "level" ++ String.fromInt model.levelNumber
 
@@ -344,6 +359,7 @@ levelToCode model =
                 (String.fromFloat x)
                 (String.fromFloat y)
 
+        joinCodeLines : String -> String -> String
         joinCodeLines a b =
             [ a
             , if String.isEmpty b then
@@ -355,11 +371,13 @@ levelToCode model =
             ]
                 |> String.concat
 
+        points : String
         points =
             Dict.toList model.points
                 |> List.map showPoint
                 |> List.foldl joinCodeLines ""
 
+        edges : String
         edges =
             Dict.toList model.edges
                 |> List.map showEdge

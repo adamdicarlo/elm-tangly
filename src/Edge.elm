@@ -1,4 +1,4 @@
-module Edge exposing (..)
+module Edge exposing (allIntersections, intersect, nearlyEqual)
 
 import Dict
 import Math.Vector2 exposing (Vec2, add, dot, getX, getY, scale, sub, vec2)
@@ -20,7 +20,7 @@ allIntersections allPoints allEdges =
                 [] ->
                     []
 
-                edge :: [] ->
+                _ :: [] ->
                     []
 
                 edge :: rest ->
@@ -45,6 +45,7 @@ fallbackPoint =
 intersect : PointDict -> Edge -> Edge -> Maybe Point
 intersect points r s =
     let
+        pointAt : Types.PointId -> Point
         pointAt id =
             Dict.get id points
                 |> Maybe.withDefault fallbackPoint
@@ -68,40 +69,47 @@ intersect points r s =
 intersectSegments : Point -> Point -> Point -> Point -> Maybe Point
 intersectSegments p pr q qs =
     let
+        r : Vec2
         r =
             sub pr p
 
+        s : Vec2
         s =
             sub qs q
 
+        r_cross_s : Float
         r_cross_s =
             cross r s
 
+        q_minus_p : Vec2
         q_minus_p =
             sub q p
 
+        q_minus_p_cross_r : Float
         q_minus_p_cross_r =
             cross q_minus_p r
-
-        q_minus_p_cross_s =
-            cross q_minus_p s
     in
     case ( isZero r_cross_s, isZero q_minus_p_cross_r ) of
         ( True, True ) ->
             -- Lines are collinear. Figure out if they overlap.
             let
+                r_dot_r : Float
                 r_dot_r =
                     dot r r
 
+                t0 : Float
                 t0 =
                     dot q_minus_p r / r_dot_r
 
+                t1 : Float
                 t1 =
                     t0 + dot s r / r_dot_r
 
+                t_min : Float
                 t_min =
                     min t0 t1
 
+                t_max : Float
                 t_max =
                     max t0 t1
             in
@@ -117,6 +125,7 @@ intersectSegments p pr q qs =
 
             else if isBetween 0 1 t_min then
                 let
+                    midpoint : Float
                     midpoint =
                         t_min + (1 - t_min) / 2
                 in
@@ -135,9 +144,15 @@ intersectSegments p pr q qs =
         ( False, _ ) ->
             -- Lines are not parallel
             let
+                q_minus_p_cross_s : Float
+                q_minus_p_cross_s =
+                    cross q_minus_p s
+
+                t : Float
                 t =
                     q_minus_p_cross_s / r_cross_s
 
+                u : Float
                 u =
                     q_minus_p_cross_r / r_cross_s
             in

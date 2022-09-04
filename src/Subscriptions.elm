@@ -2,7 +2,7 @@ module Subscriptions exposing (subscriptions)
 
 import Browser.Events exposing (onKeyDown, onKeyUp, onMouseDown, onMouseMove, onMouseUp, onResize)
 import Json.Decode as D
-import Keyboard exposing (Key(..))
+import Keyboard exposing (Key)
 import Math.Vector2 exposing (Vec2, getX, getY, vec2)
 import Types exposing (Mode(..), Model, Msg(..))
 
@@ -26,18 +26,17 @@ hudHeight =
 
 keyEvent : Model -> (Key -> Msg) -> D.Decoder Msg
 keyEvent model message =
-    let
-        pickMsg =
-            \rawKey ->
-                case Keyboard.modifierKey rawKey of
-                    Just k ->
-                        message k
-
-                    Nothing ->
-                        NoOp
-    in
     if model.mode == Edit then
-        D.map pickMsg Keyboard.eventKeyDecoder
+        Keyboard.eventKeyDecoder
+            |> D.map
+                (\rawKey ->
+                    case Keyboard.modifierKey rawKey of
+                        Just k ->
+                            message k
+
+                        Nothing ->
+                            NoOp
+                )
 
     else
         D.fail "keys only used in edit mode"
@@ -46,6 +45,7 @@ keyEvent model message =
 mouseEvent : Model -> (Vec2 -> Msg) -> D.Decoder Msg
 mouseEvent model message =
     let
+        width : Float
         width =
             if model.mode == Edit then
                 hudEditModeWidth
@@ -77,6 +77,7 @@ mouseEvent model message =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
+        normalModeEvents : List (Sub Msg)
         normalModeEvents =
             -- Prevent game input messages when modal is open
             if model.levelCodeModalActive then
@@ -87,7 +88,7 @@ subscriptions model =
                 , onKeyUp <| keyEvent model KeyUp
                 , onMouseDown <| mouseEvent model MouseDown
                 , onMouseMove <| mouseEvent model MouseMove
-                , onMouseUp <| mouseEvent model MouseUp
+                , onMouseUp <| mouseEvent model (always MouseUp)
                 ]
     in
     Sub.batch <| onResize (\x y -> toSize x y |> WindowSize) :: normalModeEvents

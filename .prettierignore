@@ -1,3 +1,6 @@
+.coverage
+.parcel-cache
 dist
-elm.json
 elm-stuff
+elm-tooling.json
+elm.json

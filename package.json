@@ -7,7 +7,8 @@
   "scripts": {
     "build": "parcel build src/index.html",
     "start": "parcel serve src/index.html",
-    "test": "prettier -c . && elm-test"
+    "test": "prettier -c . && elm-test-rs",
+    "postinstall": "elm-tooling install"
   },
   "prettier": {
     "semi": false,
@@ -17,11 +18,8 @@
   },
   "devDependencies": {
     "@parcel/transformer-elm": "2.7.0",
-    "elm": "^0.19.1-5",
-    "elm-format": "^0.8.5",
-    "elm-json": "^0.2.12",
     "elm-review": "^2.7.4",
-    "elm-test": "^0.19.1-revision9",
+    "elm-tooling": "^1.12.0",
     "parcel": "^2.7.0",
     "prettier": "^2.7.1",
     "prettier-plugin-elm": "^0.8.0"

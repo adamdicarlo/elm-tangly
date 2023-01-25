@@ -135,7 +135,7 @@ viewPoints model =
         points =
             Dict.toList model.points
 
-        viewPoint : ( PointId, Point ) -> Shape userMsg
+        viewPoint : ( PointId, Point ) -> Shape Never
         viewPoint ( id, point ) =
             circle pointRadius
                 |> GraphicSVG.filled (styleForPointId model id)

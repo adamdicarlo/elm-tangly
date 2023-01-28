@@ -65,7 +65,6 @@ type Msg
     | MouseMove Vec2
     | MouseUp
     | NextLevel
-    | NoOp
     | PlayMode
     | ToggleLevelCodeModal
     | WindowSize Vec2
@@ -272,11 +271,6 @@ update msg model =
                 , levelNumber = model.levelNumber + 1
                 , levelSolved = False
               }
-            , Cmd.none
-            )
-
-        NoOp ->
-            ( model
             , Cmd.none
             )
 

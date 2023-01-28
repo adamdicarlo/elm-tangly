@@ -9,6 +9,7 @@ body {
   font-family: "Lato", sans-serif;
   font-size: 22px;
   margin: 0;
+  overflow: hidden;
 }
 
 pre {

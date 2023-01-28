@@ -1,5 +1,5 @@
 import "./main.css"
-import { Elm } from "./App.elm"
-Elm.App.init({
+import { Elm } from "./Main.elm"
+Elm.Main.init({
   node: document.getElementById("root"),
 })

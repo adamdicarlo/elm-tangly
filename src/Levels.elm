@@ -1,4 +1,4 @@
-module Constants exposing (edgesForLevel, pointRadius, pointsForLevel)
+module Levels exposing (edgesForLevel, pointsForLevel)
 
 import Dict
 import List.Extra as List
@@ -155,8 +155,3 @@ level4 =
             , ( "0", vec2 -319 -119.5 )
             ]
     }
-
-
-pointRadius : Float
-pointRadius =
-    8

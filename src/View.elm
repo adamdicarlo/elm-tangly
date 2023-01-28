@@ -3,23 +3,12 @@ module View exposing (view)
 import Constants exposing (pointRadius)
 import Dict
 import Edge exposing (allIntersections)
-import GraphicSVG
-    exposing
-        ( Color
-        , LineType
-        , Shape
-        , circle
-        , line
-        , move
-        , outlined
-        , rect
-        , solid
-        )
-import GraphicSVG.Widget
-import Html exposing (Html, button, div, pre, span, text)
-import Html.Attributes exposing (class, disabled, style)
-import Html.Events exposing (onClick)
-import Math.Vector2 exposing (vec2)
+import GraphicSVG as Svg exposing (Color, LineType, Shape)
+import GraphicSVG.Widget as Widget
+import Html exposing (Html)
+import Html.Attributes as Attributes
+import Html.Events as Events
+import Math.Vector2 as Vector2 exposing (vec2)
 import Model exposing (edgeExists, isSelectionEmpty)
 import Set
 import Types
@@ -37,7 +26,7 @@ import Types
 
 toTuple : Point -> ( Float, Float )
 toTuple p =
-    ( Math.Vector2.getX p, Math.Vector2.getY p )
+    ( Vector2.getX p, Vector2.getY p )
 
 
 fallbackPoint : Point
@@ -59,7 +48,7 @@ view ({ edges, points, width, height } as model) =
                 , viewPoints model
                 , viewIntersections model intersections
                 ]
-                |> GraphicSVG.Widget.icon "gfx" width height
+                |> Widget.icon "gfx" width height
 
         canvasStyleAttrs : List (Html.Attribute msg)
         canvasStyleAttrs =
@@ -67,18 +56,18 @@ view ({ edges, points, width, height } as model) =
                 Bored ->
                     if model.mode == Edit && isSelectionEmpty model then
                         -- indicate that clicking will create a vertex
-                        [ style "cursor" "cell" ]
+                        [ Attributes.style "cursor" "cell" ]
 
                     else
                         []
 
                 Hovering _ ->
-                    [ style "cursor" "pointer" ]
+                    [ Attributes.style "cursor" "pointer" ]
 
                 Dragging _ ->
-                    [ style "cursor" "move" ]
+                    [ Attributes.style "cursor" "move" ]
     in
-    div (class "tangly" :: canvasStyleAttrs)
+    Html.div (Attributes.class "tangly" :: canvasStyleAttrs)
         [ canvas
         , viewHUD model intersections
         , viewLevelCodeModal model
@@ -87,22 +76,22 @@ view ({ edges, points, width, height } as model) =
 
 hoverDragColor : Color
 hoverDragColor =
-    GraphicSVG.green
+    Svg.green
 
 
 normalColor : Color
 normalColor =
-    GraphicSVG.black
+    Svg.black
 
 
 selectedColor : Color
 selectedColor =
-    GraphicSVG.red
+    Svg.red
 
 
 selectionLineType : LineType
 selectionLineType =
-    solid 2
+    Svg.solid 2
 
 
 styleForPointId : Model -> PointId -> Color
@@ -131,22 +120,22 @@ styleForPointId model id =
 viewPoints : Model -> List (Shape Never)
 viewPoints model =
     let
-        points : List ( PointId, Math.Vector2.Vec2 )
+        points : List ( PointId, Vector2.Vec2 )
         points =
             Dict.toList model.points
 
         viewPoint : ( PointId, Point ) -> Shape Never
         viewPoint ( id, point ) =
-            circle pointRadius
-                |> GraphicSVG.filled (styleForPointId model id)
-                |> move (toTuple point)
+            Svg.circle pointRadius
+                |> Svg.filled (styleForPointId model id)
+                |> Svg.move (toTuple point)
 
         viewSelection : ( PointId, Point ) -> Maybe (Shape Never)
         viewSelection ( id, point ) =
             if Set.member id model.selectedPoints then
-                rect (2 * pointRadius + 4) (2 * pointRadius + 4)
-                    |> outlined selectionLineType selectedColor
-                    |> move (toTuple point)
+                Svg.rect (2 * pointRadius + 4) (2 * pointRadius + 4)
+                    |> Svg.outlined selectionLineType selectedColor
+                    |> Svg.move (toTuple point)
                     |> Just
 
             else
@@ -169,8 +158,8 @@ viewEdges model =
 
         viewEdge : { from : PointId, to : PointId } -> Shape Never
         viewEdge { from, to } =
-            line (pointById from) (pointById to)
-                |> outlined (solid 2) GraphicSVG.purple
+            Svg.line (pointById from) (pointById to)
+                |> Svg.outlined (Svg.solid 2) Svg.purple
     in
     Dict.values model.edges |> List.map viewEdge
 
@@ -180,7 +169,7 @@ viewIntersections _ intersections =
     let
         viewIntersection : Point -> Shape Never
         viewIntersection point =
-            circle 4 |> outlined (solid 1) GraphicSVG.red |> move (toTuple point)
+            Svg.circle 4 |> Svg.outlined (Svg.solid 1) Svg.red |> Svg.move (toTuple point)
     in
     List.map viewIntersection intersections
 
@@ -206,39 +195,42 @@ viewHUD model intersections =
 
         level : Html Msg
         level =
-            div [ class "level" ]
+            Html.div [ Attributes.class "level" ]
                 [ String.concat
                     [ "Level "
                     , String.fromInt model.levelNumber
                     ]
-                    |> text
+                    |> Html.text
                 ]
 
         progress : Html Msg
         progress =
-            div [ class "progress" ]
+            Html.div [ Attributes.class "progress" ]
                 [ pluralize "intersection" "intersections" count
-                    |> text
+                    |> Html.text
                 ]
 
         status : Html Msg
         status =
-            div [ class "statusContainer" ] [ level, progress ]
-
-        className : String
-        className =
-            if model.mode == Edit then
-                "hud editMode"
-
-            else
-                "hud"
+            Html.div [ Attributes.class "statusContainer" ]
+                [ level
+                , progress
+                ]
     in
-    div [ class className ] [ status, viewHUDActions model ]
+    Html.div
+        [ Attributes.classList
+            [ ( "hud", True )
+            , ( "editMode", model.mode == Edit )
+            ]
+        ]
+        [ status
+        , viewHUDActions model
+        ]
 
 
 viewHUDActions : Model -> Html Msg
 viewHUDActions model =
-    div [ class "action" ]
+    Html.div [ Attributes.class "action" ]
         (case model.mode of
             Play ->
                 if model.levelSolved then
@@ -250,20 +242,21 @@ viewHUDActions model =
                     [ editButton ]
 
             Edit ->
-                List.concat
-                    [ if isSelectionEmpty model then
+                List.append [ levelCodeButton, playButton ] <|
+                    if isSelectionEmpty model then
                         []
 
-                      else
+                    else
                         [ deleteButton, createEdgeButton model ]
-                    , [ levelCodeButton, playButton ]
-                    ]
         )
 
 
 iconLabel : String -> String -> Html Msg
 iconLabel icon label =
-    span [] [ span [ class "icon" ] [ text icon ], span [] [ text label ] ]
+    Html.span []
+        [ Html.span [ Attributes.class "icon" ] [ Html.text icon ]
+        , Html.span [] [ Html.text label ]
+        ]
 
 
 createEdgeButton : Model -> Html Msg
@@ -272,54 +265,86 @@ createEdgeButton model =
         -- Exactly two vertices should be selected
         from :: to :: [] ->
             if edgeExists model from to then
-                button [ class "small gray disabled btn-3d", disabled True ] [ iconLabel "🌟" "Create Edge" ]
+                Html.button
+                    [ Attributes.class "small gray disabled btn-3d"
+                    , Attributes.disabled True
+                    ]
+                    [ iconLabel "🌟" "Create Edge" ]
 
             else
-                button [ class "small green btn-3d", onClick <| CreateEdge from to ] [ iconLabel "🌟" "Create Edge" ]
+                Html.button
+                    [ Attributes.class "small green btn-3d"
+                    , Events.onClick <| CreateEdge from to
+                    ]
+                    [ iconLabel "🌟" "Create Edge" ]
 
         _ ->
-            span [] []
+            Html.span [] []
 
 
 editButton : Html Msg
 editButton =
-    button [ class "small blue btn-3d", onClick EditMode ] [ iconLabel "🔧" "Edit" ]
+    Html.button
+        [ Attributes.class "small blue btn-3d"
+        , Events.onClick EditMode
+        ]
+        [ iconLabel "🔧" "Edit" ]
 
 
 levelCodeButton : Html Msg
 levelCodeButton =
-    button [ class "small green btn-3d", onClick ToggleLevelCodeModal ] [ iconLabel "👾" "Code" ]
+    Html.button
+        [ Attributes.class "small green btn-3d"
+        , Events.onClick ToggleLevelCodeModal
+        ]
+        [ iconLabel "👾" "Code" ]
 
 
 nextLevelButton : Html Msg
 nextLevelButton =
-    button [ class "btn-3d red", onClick NextLevel ] [ text "Next level →" ]
+    Html.button
+        [ Attributes.class "btn-3d red"
+        , Events.onClick NextLevel
+        ]
+        [ Html.text "Next level →" ]
 
 
 deleteButton : Html Msg
 deleteButton =
-    button [ class "small red btn-3d", onClick Delete ] [ iconLabel "💀" "Delete" ]
+    Html.button
+        [ Attributes.class "small red btn-3d"
+        , Events.onClick Delete
+        ]
+        [ iconLabel "💀" "Delete" ]
 
 
 playButton : Html Msg
 playButton =
-    button [ class "small blue btn-3d", onClick PlayMode ] [ iconLabel "🎮" "Play" ]
+    Html.button
+        [ Attributes.class "small blue btn-3d"
+        , Events.onClick PlayMode
+        ]
+        [ iconLabel "🎮" "Play" ]
 
 
 viewLevelCodeModal : Model -> Html Msg
 viewLevelCodeModal model =
     if model.levelCodeModalActive then
-        div [ class "levelCodeModalBackdrop open" ]
-            [ div [ class "levelCodeModal" ]
-                [ pre []
-                    [ text <| levelToCode model
+        Html.div [ Attributes.class "levelCodeModalBackdrop open" ]
+            [ Html.div [ Attributes.class "levelCodeModal" ]
+                [ Html.pre []
+                    [ Html.text <| levelToCode model
                     ]
-                , button [ class "btn-3d green", onClick ToggleLevelCodeModal ] [ text "OK" ]
+                , Html.button
+                    [ Attributes.class "btn-3d green"
+                    , Events.onClick ToggleLevelCodeModal
+                    ]
+                    [ Html.text "OK" ]
                 ]
             ]
 
     else
-        div [ class "levelCodeModalBackdrop" ] []
+        Html.div [ Attributes.class "levelCodeModalBackdrop" ] []
 
 
 format3 : String -> String -> String -> String -> String
@@ -329,7 +354,45 @@ format3 format a b c =
             [ w, a, x, b, y, c, z ] |> String.concat
 
         _ ->
-            [ "Bug in format passed to format3:", format ] |> String.concat
+            [ "Bug in format passed to format3:"
+            , format
+            ]
+                |> String.concat
+
+
+showEdge : ( EdgeId, Edge ) -> String
+showEdge ( id, { from, to } ) =
+    format3
+        "( \"%\", Edge % % )"
+        id
+        from
+        to
+
+
+showPoint : ( PointId, Point ) -> String
+showPoint ( id, p ) =
+    let
+        ( x, y ) =
+            toTuple p
+    in
+    format3
+        "( \"%\", vec2 % % )"
+        id
+        (String.fromFloat x)
+        (String.fromFloat y)
+
+
+joinCodeLines : String -> String -> String
+joinCodeLines a b =
+    [ a
+    , if String.isEmpty b then
+        ""
+
+      else
+        "\n            , "
+    , b
+    ]
+        |> String.concat
 
 
 levelToCode : Model -> String
@@ -338,38 +401,6 @@ levelToCode model =
         varName : String
         varName =
             "level" ++ String.fromInt model.levelNumber
-
-        showEdge : ( EdgeId, Edge ) -> String
-        showEdge ( id, { from, to } ) =
-            format3
-                "( \"%\", Edge % % )"
-                id
-                from
-                to
-
-        showPoint : ( PointId, Point ) -> String
-        showPoint ( id, p ) =
-            let
-                ( x, y ) =
-                    toTuple p
-            in
-            format3
-                "( \"%\", vec2 % % )"
-                id
-                (String.fromFloat x)
-                (String.fromFloat y)
-
-        joinCodeLines : String -> String -> String
-        joinCodeLines a b =
-            [ a
-            , if String.isEmpty b then
-                ""
-
-              else
-                "\n            , "
-            , b
-            ]
-                |> String.concat
 
         points : String
         points =

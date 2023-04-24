@@ -98,7 +98,7 @@ init =
       -- "Latch" whether this level has been solved, so the user can play around (and
       -- un-solve the puzzle) without having to re-solve to advance to the next level
       , levelSolved = False
-      , mode = Edit --Play
+      , mode = Play
       , points = pointsForLevel 1
       , selectedEdges = Set.empty
       , selectedPoints = Set.empty

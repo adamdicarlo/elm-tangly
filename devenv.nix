@@ -27,15 +27,11 @@
 
   # https://devenv.sh/scripts/
   scripts.build = {
-    exec = ''
-      bunx parcel build src/index.html
-    '';
+    exec = "rm -rf dist; bunx vite build";
     description = "Build the project for production";
   };
   scripts.start = {
-    exec = ''
-      bunx parcel serve src/index.html
-    '';
+    exec = "bunx vite";
     description = "Start the local development server";
   };
   scripts.tests = {

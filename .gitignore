@@ -14,4 +14,7 @@ node_modules
 .DS_Store
 
 .coverage
+.devenv
+.devenv.flake.nix
 .parcel-cache
+.pre-commit-config.yaml

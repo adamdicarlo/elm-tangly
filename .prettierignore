@@ -1,6 +1,9 @@
 .coverage
+.devenv
 .parcel-cache
+.pre-commit-config.yaml
 dist
+devenv.yaml
 elm-stuff
 elm-tooling.json
 elm.json

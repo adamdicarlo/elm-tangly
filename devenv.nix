@@ -1,4 +1,9 @@
-{pkgs, ...}: {
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
   # https://devenv.sh/basics/
 
   # https://devenv.sh/packages/
@@ -50,19 +55,13 @@
 
   # https://devenv.sh/basics/
   enterShell = ''
+    bun install
+
     echo -e '\nAll set! The following project commands are available in this shell:\n'
 
-    nix eval --impure --raw --expr '
-      let
-        pkgs = import <nixpkgs> {};
-        scripts = (import ./devenv.nix { inherit pkgs; }).scripts;
-      in
-      pkgs.lib.strings.concatLines
-        (builtins.map
-          (name: "- ''\${name}: " + scripts.''\${name}.description)
-          (builtins.attrNames scripts)
-        )
-    '
+    ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|> |' -e 's|••| |g'
+    ${lib.generators.toKeyValue {} (lib.mapAttrs (name: value: value.description) config.scripts)}
+    EOF
   '';
 
   # https://devenv.sh/tasks/

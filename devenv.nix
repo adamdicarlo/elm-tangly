@@ -31,26 +31,33 @@
   # https://devenv.sh/services/
 
   # https://devenv.sh/scripts/
-  scripts.build = {
-    exec = "rm -rf dist; bunx vite build";
-    description = "Build the project for production";
-  };
-  scripts.start = {
-    exec = "bunx vite";
-    description = "Start the local development server";
-  };
-  scripts.tests = {
-    exec = ''
-      echo >&2 -e "\n# Running prettier"
-      bunx prettier -c .
+  scripts = {
+    build = {
+      exec = ''cd "$DEVENV_ROOT" && rm -rf dist && bunx vite build'';
+      description = "Build the project for production";
+    };
+    format = {
+      exec = ''cd "$DEVENV_ROOT" && prettier "$@" .'';
+      description = "Format code or check formatting";
+    };
+    start = {
+      exec = ''cd "$DEVENV_ROOT" && bunx vite'';
+      description = "Start the local development server";
+    };
+    tests = {
+      exec = ''
+        cd "$DEVENV_ROOT"
+        echo >&2 -e "\n# Running prettier"
+        bunx prettier -c .
 
-      echo >&2 -e "\n# Running elm-test-rs"
-      bunx elm-test-rs
+        echo >&2 -e "\n# Running elm-test-rs"
+        bunx elm-test-rs
 
-      echo >&2 -e "\n# Running elm-review"
-      bunx elm-review
-    '';
-    description = "Run tests";
+        echo >&2 -e "\n# Running elm-review"
+        bunx elm-review
+      '';
+      description = "Run tests";
+    };
   };
 
   # https://devenv.sh/basics/

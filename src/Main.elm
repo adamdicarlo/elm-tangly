@@ -257,9 +257,7 @@ update msg model =
                         value ->
                             value
                 , levelSolved =
-                    model.levelSolved
-                        || List.length (allIntersections model.points model.edges)
-                        == 0
+                    model.levelSolved || List.isEmpty (allIntersections model.points model.edges)
               }
             , Cmd.none
             )

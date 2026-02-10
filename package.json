@@ -4,12 +4,6 @@
   "repository": "https://github.com/adamdicarlo/elm-tangly",
   "author": "Adam DiCarlo <elm-tangly@bikko.org>",
   "license": "MIT",
-  "prettier": {
-    "semi": false,
-    "plugins": [
-      "prettier-plugin-elm"
-    ]
-  },
   "devDependencies": {
     "elm-review": "^2.13.5",
     "prettier": "^3.8.1",

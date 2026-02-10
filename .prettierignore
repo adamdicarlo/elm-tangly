@@ -2,8 +2,9 @@
 .devenv
 .parcel-cache
 .pre-commit-config.yaml
-dist
 devenv.yaml
+dist
 elm-stuff
 elm-tooling.json
 elm.json
+review/suppressed

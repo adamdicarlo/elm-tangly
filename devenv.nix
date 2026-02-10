@@ -33,19 +33,32 @@
   # https://devenv.sh/scripts/
   scripts = {
     build = {
-      exec = ''cd "$DEVENV_ROOT" && rm -rf dist && bunx vite build'';
+      exec = ''cd "$DEVENV_ROOT" && clean && bunx vite build'';
       description = "Build the project for production";
     };
+    clean = {
+      exec = ''rm -rf "$DEVENV_ROOT/dist"'';
+      description = "Clean build outputs";
+    };
     format = {
-      exec = ''cd "$DEVENV_ROOT" && prettier "$@" .'';
-      description = "Format code or check formatting";
+      exec = ''
+        set -e
+        PRETTIER_ARG=--write
+        if [[ -n "$1" ]]; then
+          PRETTIER_ARG=$1
+        fi
+        cd "$DEVENV_ROOT"
+        bunx prettier "$PRETTIER_ARG" .
+      '';
+      description = "Format code. Pass --check to only check formatting.";
     };
     start = {
-      exec = ''cd "$DEVENV_ROOT" && bunx vite'';
+      exec = ''cd "$DEVENV_ROOT" && clean && bunx vite'';
       description = "Start the local development server";
     };
     tests = {
       exec = ''
+        set -e
         cd "$DEVENV_ROOT"
         echo >&2 -e "\n# Running prettier"
         bunx prettier -c .

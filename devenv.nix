@@ -51,14 +51,18 @@
     tests = {
       exec = ''
         set -e
+        ESC=$'\033'
+        PINK=$ESC[35m$ESC[1m
+        RESET=$ESC[0m
+
         cd "$DEVENV_ROOT"
-        echo >&2 -e "\n# Running prettier"
+        echo >&2 -e "\n$PINK# Running prettier$RESET\n"
         bunx prettier -c .
 
-        echo >&2 -e "\n# Running elm-test-rs"
+        echo >&2 -e "\n$PINK# Running elm-test-rs$RESET"
         bunx elm-test-rs
 
-        echo >&2 -e "\n# Running elm-review"
+        echo >&2 -e "\n$PINK# Running elm-review$RESET\n"
         bunx elm-review
       '';
       description = "Run tests";
